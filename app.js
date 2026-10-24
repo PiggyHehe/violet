@@ -3488,9 +3488,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       if (line.time >= 0) {
-        div.addEventListener('click', () => {
+        div.addEventListener('click', (e) => {
+          e.stopPropagation();
           const seekTime = getLineStartTime(index);
-          if (el.nativeAudio && seekTime >= 0) el.nativeAudio.currentTime = seekTime;
+          if (el.nativeAudio && seekTime >= 0) {
+            state._userSeekingLyric = true;
+            setTimeout(() => { state._userSeekingLyric = false; }, 350);
+            el.nativeAudio.currentTime = seekTime;
+            state.lastActiveLyricIdx = -1;
+            state.forceLyricsScroll = true;
+            updateSyncedLyricsHighlight(seekTime, index);
+            if (isGradientMode()) {
+              updateActiveGradient();
+              startGradientLoop();
+            }
+          }
         });
       }
       el.lyricsContainer.appendChild(div);
@@ -3805,7 +3817,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     lyricsScrollRaf = requestAnimationFrame(step);
   }
-  if (el.lyricsContainer) ['wheel', 'touchstart', 'pointerdown'].forEach((ev) => el.lyricsContainer.addEventListener(ev, () => cancelAnimationFrame(lyricsScrollRaf), { passive: true }));
+  if (el.lyricsContainer) ['wheel', 'touchstart', 'pointerdown'].forEach((ev) => el.lyricsContainer.addEventListener(ev, () => {
+    if (state._userSeekingLyric) return;
+    cancelAnimationFrame(lyricsScrollRaf);
+  }, { passive: true }));
   applyLyricsEase();
   applyLyricsGradientTightness();
 
@@ -3949,9 +3964,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     return Math.max(0, top - (parentH / 2) + (lineH / 2));
   }
 
-  function updateSyncedLyricsHighlight(currentTime) {
+  function updateSyncedLyricsHighlight(currentTime, forcedIndex = -1) {
     if (state.syncedLyrics.length === 0 || !state.isWindowVisible) return;
-    let activeIndex = -1;
+    let activeIndex = forcedIndex >= 0 ? forcedIndex : -1;
 
     const validLines = [];
     for (let i = 0; i < state.syncedLyrics.length; i++) {
@@ -3964,13 +3979,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const lookAhead = state.isCustomLyrics ? 0.25 : 0.0;
     const matchTime = currentTime + lookAhead;
 
-    for (let i = 0; i < validLines.length; i++) {
-      const current = validLines[i];
-      const next = validLines[i + 1];
-      const nextTime = next ? next.time : Infinity;
-      if (matchTime >= current.time && matchTime < nextTime) {
-        activeIndex = current.index;
-        break;
+    if (activeIndex === -1) {
+      for (let i = 0; i < validLines.length; i++) {
+        const current = validLines[i];
+        const next = validLines[i + 1];
+        const nextTime = next ? next.time : Infinity;
+        if (matchTime >= current.time && matchTime < nextTime) {
+          activeIndex = current.index;
+          break;
+        }
       }
     }
 
@@ -4048,7 +4065,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         lineEl.classList.remove('active');
         if (lineEl.classList.contains('gradient-line')) {
-          lineEl.firstElementChild && lineEl.firstElementChild.style.setProperty('--k', '0');
+          lineEl.firstElementChild && lineEl.firstElementChild.style.setProperty('--k', (idx < activeIndex) ? '1' : '0');
         }
         if (!isGradientMode() && getAdv('karaoke_words', true) && state.lyricsMode === 'word') {
           lineEl.querySelectorAll('.lyric-word').forEach(wSpan => {
