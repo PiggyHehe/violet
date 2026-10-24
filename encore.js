@@ -1,4 +1,4 @@
-// Muriel Encore: counts what you actually listen to (a play counts after 30s, or half of a short song) and
+// Violet Wrapped: counts what you actually listen to (a play counts after 30s, or half of a short song) and
 // plays it back: the "On repeat" top 3 on the home page and a story-style recap you can open any time.
 // Everything stays on the device (localStorage). Listening older than ~13 months is folded into one
 // all-time total per song (compact below), so the data stays small however long Muriel is used.
@@ -200,7 +200,7 @@
         <div class="onrepeat-head">
           <h3 class="section-title">On repeat</h3>
           <div class="onrepeat-chips">${chips}</div>
-          <button type="button" class="onrepeat-encore"><svg viewBox="0 0 1024 1024"><path d="${STAR}"/></svg>Encore</button>
+          <button type="button" class="onrepeat-encore"><svg viewBox="0 0 1024 1024"><path d="${STAR}"/></svg>Wrapped</button>
         </div>
         ${top.length ? `<div class="onrepeat-list">${top.map((s, i) => `
           <button type="button" class="onrepeat-row" data-i="${i}">
@@ -240,7 +240,7 @@
   function build(st) {
     const label = PERIODS[st.period];
     if (!st.songs.length) {
-      return [`<div class="enc-slide enc-center"><svg class="enc-star" viewBox="0 0 1024 1024"><path d="${STAR}"/></svg><h1 class="enc-big">Not much yet</h1><p class="enc-sub">Play some songs and come back: Encore fills up as you listen.</p>${pickers(st.period)}</div>`];
+      return [`<div class="enc-slide enc-center"><svg class="enc-star" viewBox="0 0 1024 1024"><path d="${STAR}"/></svg><h1 class="enc-big">Not much yet</h1><p class="enc-sub">Play some songs and come back: Violet Wrapped fills up as you listen.</p>${pickers(st.period)}</div>`];
     }
     const s1 = st.songs[0];
     const a1 = st.artists[0];
@@ -248,14 +248,14 @@
     const maxH = Math.max(1, ...st.hours);
     const list = (items, fn) => `<ol class="enc-list">${items.map(fn).join('')}</ol>`;
     return [
-      `<div class="enc-slide enc-center"><svg class="enc-star enc-spin" viewBox="0 0 1024 1024"><path d="${STAR}"/></svg><p class="enc-kicker">Muriel Encore</p><h1 class="enc-big">${esc(label)},<br>played back.</h1>${pickers(st.period)}<button type="button" class="enc-go" data-next>Start</button></div>`,
+      `<div class="enc-slide enc-center"><svg class="enc-star enc-spin" viewBox="0 0 1024 1024"><path d="${STAR}"/></svg><p class="enc-kicker">Violet Wrapped</p><h1 class="enc-big">${esc(label)},<br>played back.</h1>${pickers(st.period)}<button type="button" class="enc-go" data-next>Start</button></div>`,
       `<div class="enc-slide enc-center"><p class="enc-kicker">You listened for</p><h1 class="enc-num" data-count="${st.minutes}">0</h1><p class="enc-big enc-sm">minutes</p><p class="enc-sub">${st.plays.toLocaleString()} plays of ${st.songs.length.toLocaleString()} different songs</p></div>`,
       `<div class="enc-slide enc-center"><p class="enc-kicker">Your #1 song</p><img class="enc-cover" src="${thumb(s1)}" alt=""><h1 class="enc-big enc-title">${esc(s1.title)}</h1><p class="enc-sub">${esc(s1.artist)}</p><p class="enc-pill">${s1.plays} ${s1.plays === 1 ? 'play' : 'plays'}</p></div>`,
       `<div class="enc-slide"><p class="enc-kicker">Your top songs</p>${list(st.songs.slice(0, 5), (s, i) => `<li style="--i:${i}"><span class="enc-rank">${i + 1}</span><img src="${thumb(s)}" alt=""><span><b>${esc(s.title)}</b><small>${esc(s.artist)}</small></span><em>${s.plays}</em></li>`)}</div>`,
       a1 ? `<div class="enc-slide enc-center"><p class="enc-kicker">Your top artist</p><img class="enc-cover enc-round" src="${esc(a1.thumb)}" alt=""><h1 class="enc-big enc-title">${esc(a1.name)}</h1><p class="enc-sub">${a1.plays} plays · ${Math.max(1, Math.round(a1.secs / 60))} min</p>${st.artists.length > 1 ? `<p class="enc-also">Also: ${st.artists.slice(1, 4).map((a) => esc(a.name)).join(', ')}</p>` : ''}</div>` : '',
       `<div class="enc-slide enc-center"><p class="enc-kicker">You're a</p><h1 class="enc-big">${esc(pName)}</h1><p class="enc-sub">${esc(pText)}</p><div class="enc-hours">${st.hours.map((n, i) => `<i style="--h:${(n / maxH).toFixed(3)};--i:${i}" title="${i}:00"></i>`).join('')}</div><div class="enc-hours-axis"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div></div>`,
       `<div class="enc-slide enc-center"><p class="enc-kicker">You listened on</p><h1 class="enc-num" data-count="${st.days}">0</h1><p class="enc-big enc-sm">${st.days === 1 ? 'day' : 'days'}</p><p class="enc-sub">Longest streak: ${st.streak} ${st.streak === 1 ? 'day' : 'days'} in a row</p></div>`,
-      `<div class="enc-slide enc-summary"><div class="enc-card"><div class="enc-card-head"><svg viewBox="0 0 1024 1024"><path d="${STAR}"/></svg><b>Muriel Encore</b><span>${esc(label)}</span></div>
+      `<div class="enc-slide enc-summary"><div class="enc-card"><div class="enc-card-head"><svg viewBox="0 0 1024 1024"><path d="${STAR}"/></svg><b>Violet Wrapped</b><span>${esc(label)}</span></div>
         <div class="enc-card-cols"><div><small>Top songs</small>${st.songs.slice(0, 5).map((s, i) => `<p>${i + 1}. ${esc(s.title)}</p>`).join('')}</div><div><small>Top artists</small>${st.artists.slice(0, 5).map((a, i) => `<p>${i + 1}. ${esc(a.name)}</p>`).join('')}</div></div>
         <div class="enc-card-foot"><div><small>Minutes</small><b>${st.minutes.toLocaleString()}</b></div><div><small>You're a</small><b>${esc(pName)}</b></div></div></div>
         <div class="enc-actions"><button type="button" class="enc-go" data-play>Play my top songs</button><button type="button" class="enc-ghost" data-share>Share</button></div></div>`,
@@ -296,17 +296,17 @@
   }
 
   function shareText(st) {
-    const lines = [`My Muriel Encore (${PERIODS[st.period]})`, `${st.minutes.toLocaleString()} minutes of music`];
+    const lines = [`My Violet Wrapped (${PERIODS[st.period]})`, `${st.minutes.toLocaleString()} minutes of music`];
     st.songs.slice(0, 5).forEach((s, i) => lines.push(`${i + 1}. ${s.title} - ${s.artist}`));
-    lines.push('', 'Muriel: free music app, no ads, no login. github.com/cloverscripts/riff-muriel');
+    lines.push('', 'Violet: liquid glass music player, no ads, no login.');
     return lines.join('\n');
   }
   async function share(st) {
     const text = shareText(st);
     const api = window.electronAPI;
-    if (api && api.shareText) { await api.shareText('My Muriel Encore', text); return; }
-    if (navigator.share) { try { await navigator.share({ title: 'My Muriel Encore', text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
-    try { await navigator.clipboard.writeText(text); if (window.MurielCore) window.MurielCore.toast('Copied your Encore'); } catch (e) {}
+    if (api && api.shareText) { await api.shareText('My Violet Wrapped', text); return; }
+    if (navigator.share) { try { await navigator.share({ title: 'My Violet Wrapped', text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(text); if (window.MurielCore) window.MurielCore.toast('Copied your Violet Wrapped'); } catch (e) {}
   }
 
   function render(period) {
@@ -326,7 +326,7 @@
     overlay.className = 'encore';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-label', 'Muriel Encore');
+    overlay.setAttribute('aria-label', 'Violet Wrapped');
     overlay.tabIndex = -1;
     returnFocus = document.activeElement;
     document.body.appendChild(overlay);

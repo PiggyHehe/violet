@@ -10200,7 +10200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const next = !btnHwAccel.classList.contains('active');
       btnHwAccel.classList.toggle('active', next);
       window.electronAPI.setHwAccel(next);
-      showToast('Restart Muriel to apply', 'info');
+      showToast('Restart Violet to apply', 'info');
     });
   }
 
@@ -10998,7 +10998,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll(`style[data-plugin="${p.file}"]`).forEach((n) => n.remove());
     const hadStop = !!(entry && entry.stop);
     loadedPlugins.delete(p.file);
-    if (!silent && !hadStop) showToast(`Restart Muriel to fully unload "${p.name}"`, 'info');
+    if (!silent && !hadStop) showToast(`Restart Violet to fully unload "${p.name}"`, 'info');
   }
   let pluginsCache = [];
   function renderPluginCards() {
@@ -11262,7 +11262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const btnConfirm = document.getElementById('btn-confirm-spotify-import');
       if (btnConfirm) btnConfirm.click();
     }
-    showToast('Welcome to Muriel!', 'info');
+    showToast('Welcome to Violet!', 'info');
   }
   if (window.electronAPI && window.electronAPI.onWelcomeResult) window.electronAPI.onWelcomeResult((d) => applyWelcomeResult(d));
 
@@ -15393,7 +15393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       const move = window.confirm(
         'Move your existing music to the new folder?\n\n' +
-        'OK: move all downloaded and imported files, then restart Muriel.\n' +
+        'OK: move all downloaded and imported files, then restart Violet.\n' +
         'Cancel: switch to the new folder without moving (files stay in the old one).'
       );
       btnChangeMusicFolder.disabled = true;
@@ -15413,7 +15413,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       btnChangeMusicFolder.textContent = 'Restarting...';
-      showToast('Restarting Muriel...');
+      showToast('Restarting Violet...');
       setTimeout(() => { if (window.electronAPI.restartApp) window.electronAPI.restartApp(); }, 400);
     });
   }
@@ -16229,7 +16229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       { label: 'Open local library', hint: 'View', run: () => switchView('local') },
       { label: 'Open queue', hint: 'View', run: () => switchView('queue') },
       { label: 'Open history', hint: 'View', run: () => switchView('history') },
-      { label: 'Muriel Encore', hint: 'Your stats', run: () => window.MurielEncore && window.MurielEncore.open('month') },
+      { label: 'Violet Wrapped', hint: 'Your stats', run: () => window.MurielEncore && window.MurielEncore.open('month') },
       { label: 'Open discover', hint: 'View', run: () => switchView('discover') },
       { label: 'Open settings', hint: 'View', run: () => switchView('settings') },
       { label: 'Audio settings', hint: 'Audio', run: () => openAudioTab('tempo') },

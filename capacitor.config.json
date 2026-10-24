@@ -1,11 +1,11 @@
 {
-  "appId": "io.github.cloverscripts.muriel",
-  "appName": "Muriel",
+  "appId": "io.github.cloverscripts.violet",
+  "appName": "Violet",
   "webDir": "www",
-  "backgroundColor": "#121214",
+  "backgroundColor": "#0B0813",
   "ios": {
     "contentInset": "never",
-    "scheme": "Muriel",
+    "scheme": "Violet",
     "limitsNavigationsToAppBoundDomains": false
   },
   "plugins": {

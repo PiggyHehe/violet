@@ -11,14 +11,14 @@ struct MurielWidgets: WidgetBundle {
     }
 }
 
-private let pink = Color(red: 1.0, green: 0.31, blue: 0.64)
-private let violet = Color(red: 0.55, green: 0.36, blue: 0.96)
+private let electricViolet = Color(red: 0.78, green: 0.49, blue: 1.0)
+private let deepAmethyst = Color(red: 0.48, green: 0.17, blue: 0.75)
 
 struct MurielLyricsLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: MurielLyricsAttributes.self) { context in
             LockScreenLyrics(state: context.state)
-                .activityBackgroundTint(Color.black.opacity(0.5))
+                .activityBackgroundTint(Color(red: 0.05, green: 0.02, blue: 0.10).opacity(0.75))
                 .activitySystemActionForegroundColor(.white)
         } dynamicIsland: { context in
             let state = context.state
@@ -55,7 +55,7 @@ struct MurielLyricsLiveActivity: Widget {
             } minimal: {
                 Artwork(data: state.artwork, size: 24, radius: 12)
             }
-            .keylineTint(pink)
+            .keylineTint(electricViolet)
         }
     }
 }
@@ -82,7 +82,7 @@ struct LockScreenLyrics: View {
     }
 
     private var header: String {
-        hasLyrics ? [state.title, state.artist].filter { !$0.isEmpty }.joined(separator: " · ") : "Muriel"
+        hasLyrics ? [state.title, state.artist].filter { !$0.isEmpty }.joined(separator: " · ") : "Violet"
     }
 
     private var hasLyrics: Bool { !state.line.isEmpty || !state.next.isEmpty }
@@ -97,7 +97,7 @@ struct LyricLines: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             if state.line.isEmpty && state.next.isEmpty {
-                Text(state.title.isEmpty ? "Muriel" : state.title)
+                Text(state.title.isEmpty ? "Violet" : state.title)
                     .font(.system(size: big, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
                     .lineLimit(2)
@@ -134,7 +134,7 @@ struct PlayingMark: View {
     var body: some View {
         Image(systemName: playing ? "waveform" : "pause.fill")
             .font(.system(size: size, weight: .semibold))
-            .foregroundColor(playing ? pink : .white.opacity(0.6))
+            .foregroundColor(playing ? electricViolet : .white.opacity(0.6))
     }
 }
 
@@ -151,7 +151,7 @@ struct Artwork: View {
                     .aspectRatio(contentMode: .fill)
             } else {
                 ZStack {
-                    LinearGradient(colors: [pink, violet], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    LinearGradient(colors: [electricViolet, deepAmethyst], startPoint: .topLeading, endPoint: .bottomTrailing)
                     Image(systemName: "sparkles")
                         .font(.system(size: size * 0.42, weight: .semibold))
                         .foregroundColor(.white)

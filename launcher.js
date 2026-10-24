@@ -4,8 +4,8 @@ const os = require('os');
 const path = require('path');
 const { execFile } = require('child_process');
 
-const NAME = 'Muriel';
-const COMMENT = 'Muriel - music player';
+const NAME = 'Violet';
+const COMMENT = 'Violet - music player';
 const APP_ID = '';
 
 function winShortcutPath() {

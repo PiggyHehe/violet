@@ -204,7 +204,7 @@ function runGUI() {
       minWidth: 360,
                                    minHeight: 500,
                                    backgroundColor: firstRun ? '#8d5ef2' : '#000000',
-                                   title: 'Muriel',
+                                   title: 'Violet',
                                    icon: path.join(__dirname, 'assets', 'icon.png'),
                                    frame: false,
                                    titleBarStyle: 'hidden',
@@ -635,7 +635,7 @@ function runGUI() {
           let trayIcon = nativeImage.createFromPath(iconPath);
           trayIcon = trayIcon.resize({ width: 22, height: 22 });
           tray = new Tray(trayIcon);
-          tray.setToolTip('Muriel');
+          tray.setToolTip('Violet');
           const contextMenu = Menu.buildFromTemplate([
             {
               label: 'Show/Hide',

@@ -1,18 +1,14 @@
-// iOS layout behaviour on top of app.js: mini player <-> now-playing sheet, swipe to dismiss,
-// and the progress line on the mini player.
+// Violet iOS layout & Spotify-inspired Liquid Glass UX on top of app.js:
+// - Time-of-day greeting, Spotify filter pills & 2-column quick-jump grid
+// - Labeled bottom navigation bar with Home icon
+// - Floating Liquid Glass mini-player with inline Like button & progress line
+// - Full-screen Now Playing sheet with swipe-to-dismiss, cover swipe-to-skip & active dot indicators
 
-// Background playback: iOS suspends Web Audio when the app is backgrounded or the screen locks,
-// but keeps a plain <audio> element playing (and on the lock screen). So on iPhone the engine never
-// routes the element through an AudioContext. Speed/pitch still work (they're element properties);
-// EQ, reverb, distortion and the visualizer need the graph and are off. app.js builds the engine on
-// DOMContentLoaded, which hasn't fired yet when this script runs.
 (() => {
-  // desktop's default text scale (1.25x) is sized for a monitor; phones start at 1.0x unless the user picked one
   if (!localStorage.getItem('muriel_font_scale')) localStorage.setItem('muriel_font_scale', '80');
   const Engine = window.MurielAudioEngine;
   if (!Engine) return;
   Engine.prototype.init = function (audioElement) { this.__element = audioElement || this.__element; };
-  // iOS ignores element.volume (hardware buttons own it); mute still works
   Engine.prototype._applyMasterVolume = function () {
     if (this.__element) this.__element.muted = !!this.isMuted || this.volume === 0;
   };
@@ -25,22 +21,144 @@
   const audio = document.querySelector('audio');
   if (!panel || !playbar || !lyricsBtn) return;
 
-  // app.js owns the drawer state; mirror it onto <body> so the player bar can restyle itself
+  // ---------- 1. Labeled Bottom Tab Bar & Spotify Home Icon ----------
+  const navDiscover = document.getElementById('nav-discover');
+  if (navDiscover) {
+    const ind = navDiscover.querySelector('.nav-indicator');
+    if (ind) {
+      ind.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1V9.5z"/></svg>`;
+    }
+  }
+
+  const navLabels = [
+    ['nav-discover', 'Home'],
+    ['nav-favorites', 'Liked'],
+    ['btn-toggle-playlists-drawer', 'Playlists'],
+    ['nav-local', 'Library'],
+    ['nav-history', 'Recents'],
+    ['nav-settings', 'Settings'],
+  ];
+  navLabels.forEach(([id, text]) => {
+    const btn = document.getElementById(id);
+    if (btn && !btn.querySelector('.violet-nav-label')) {
+      const span = document.createElement('span');
+      span.className = 'violet-nav-label';
+      span.textContent = text;
+      btn.appendChild(span);
+    }
+  });
+
+  // ---------- 2. Spotify-Style Greeting, Filter Chips & 2-Col Quick Grid ----------
+  const discoverEmpty = document.getElementById('discover-empty');
+  if (discoverEmpty && !document.getElementById('violet-home-top')) {
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+
+    const waveLabel = document.querySelector('.my-wave-title');
+    if (waveLabel) waveLabel.textContent = 'Violet DJ Mix';
+    const playWaveSpan = document.querySelector('#btn-play-my-wave span');
+    if (playWaveSpan) playWaveSpan.textContent = 'Play Mix';
+
+    const topBlock = document.createElement('div');
+    topBlock.id = 'violet-home-top';
+    topBlock.className = 'violet-home-top';
+    topBlock.innerHTML = `
+      <div class="violet-greeting-row">
+        <h1 class="violet-greeting-text">${greeting}</h1>
+        <div class="violet-greeting-actions">
+          <button type="button" class="violet-icon-chip" id="violet-btn-wrapped" title="Violet Wrapped">
+            <svg width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor"><path d="M512 32Q570 454 992 512Q570 570 512 992Q454 570 32 512Q454 454 512 32Z"/></svg>
+            <span>Wrapped</span>
+          </button>
+          <button type="button" class="violet-icon-chip" id="violet-btn-history" title="Recently played">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="violet-filter-pills">
+        <button type="button" class="violet-pill active" data-vpill="all">All</button>
+        <button type="button" class="violet-pill" data-vpill="favorites">Liked Songs</button>
+        <button type="button" class="violet-pill" data-vpill="playlists">Playlists</button>
+        <button type="button" class="violet-pill" data-vpill="local">Downloaded</button>
+      </div>
+      <div class="violet-quick-grid" id="violet-quick-grid">
+        <button type="button" class="violet-quick-card" data-qaction="favorites">
+          <div class="violet-quick-art violet-art-liked">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </div>
+          <span class="violet-quick-title">Liked Songs</span>
+        </button>
+        <button type="button" class="violet-quick-card" data-qaction="wave">
+          <div class="violet-quick-art violet-art-wave">
+            <svg width="20" height="20" viewBox="0 0 1024 1024" fill="currentColor"><path d="M500 160Q543.2 476.8 860 520Q543.2 563.2 500 880Q456.8 563.2 140 520Q456.8 476.8 500 160Z"/></svg>
+          </div>
+          <span class="violet-quick-title">Violet DJ Mix</span>
+        </button>
+        <button type="button" class="violet-quick-card" data-qaction="playlists">
+          <div class="violet-quick-art violet-art-playlists">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15V6M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM12 12H3M16 6H3M12 18H3"/></svg>
+          </div>
+          <span class="violet-quick-title">Your Playlists</span>
+        </button>
+        <button type="button" class="violet-quick-card" data-qaction="encore">
+          <div class="violet-quick-art violet-art-encore">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          </div>
+          <span class="violet-quick-title">Violet Wrapped</span>
+        </button>
+      </div>
+    `;
+    discoverEmpty.prepend(topBlock);
+
+    topBlock.querySelector('#violet-btn-wrapped')?.addEventListener('click', () => {
+      if (window.MurielEncore) window.MurielEncore.open();
+      else document.getElementById('btn-open-encore')?.click();
+    });
+    topBlock.querySelector('#violet-btn-history')?.addEventListener('click', () => {
+      document.getElementById('nav-history')?.click();
+    });
+    topBlock.querySelectorAll('[data-vpill]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const t = b.dataset.vpill;
+        if (t === 'favorites') document.getElementById('nav-favorites')?.click();
+        else if (t === 'playlists') document.getElementById('btn-toggle-playlists-drawer')?.click();
+        else if (t === 'local') document.getElementById('nav-local')?.click();
+      });
+    });
+    topBlock.querySelectorAll('[data-qaction]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const a = b.dataset.qaction;
+        if (a === 'favorites') document.getElementById('nav-favorites')?.click();
+        else if (a === 'wave') document.getElementById('btn-play-my-wave')?.click();
+        else if (a === 'playlists') document.getElementById('btn-toggle-playlists-drawer')?.click();
+        else if (a === 'encore') {
+          if (window.MurielEncore) window.MurielEncore.open();
+          else document.getElementById('btn-open-encore')?.click();
+        }
+      });
+    });
+  }
+
+  // ---------- 3. Now Playing Sheet & Close Chevron ----------
+  const closeBtn = document.getElementById('btn-close-right-panel');
+  if (closeBtn) {
+    closeBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+  }
+
   const sync = () => document.body.classList.toggle('np-open', !panel.classList.contains('hidden'));
   new MutationObserver(sync).observe(panel, { attributes: true, attributeFilter: ['class'] });
   sync();
 
   const openSheet = () => { if (panel.classList.contains('hidden')) lyricsBtn.click(); };
-  const closeSheet = () => { if (!panel.classList.contains('hidden')) document.getElementById('btn-close-right-panel').click(); };
+  const closeSheet = () => { if (!panel.classList.contains('hidden')) closeBtn?.click(); };
 
-  // tapping the mini player (but not its buttons) opens the sheet
   playbar.addEventListener('click', (e) => {
     if (document.body.classList.contains('np-open')) return;
     if (e.target.closest('button, input, .scrubber-track-container')) return;
     openSheet();
   });
 
-  // swipe down on the sheet's top area to close it
+  // Swipe down on the sheet's top area to close it
   let startY = null;
   panel.addEventListener('touchstart', (e) => {
     const t = e.touches[0];
@@ -60,10 +178,7 @@
     if (dy > 110) closeSheet();
   });
 
-  // Picked images and videos (background, banner, song covers) are saved as file URLs, and those change when
-  // iOS moves the app container (every update or reinstall). Rebuild each saved one from its file name, then
-  // delete picks nothing uses any more (every pick is a new copy). Only the background was repaired before,
-  // and picking a song cover made even that repair forget the background.
+  // Repair picked media file URLs across iOS container updates
   const fixPickedMedia = async () => {
     const api = window.electronAPI;
     if (!api.fileUrl) return;
@@ -102,7 +217,7 @@
   };
   if (window.MurielCore) fixPickedMedia(); else window.addEventListener('muriel:ready', fixPickedMedia, { once: true });
 
-  // phones default to word-by-word karaoke (the Line/Word button still switches)
+  // Phones default to word-by-word karaoke
   const preferWordLyrics = () => {
     const st = window.MurielCore && window.MurielCore.state;
     const btn = document.getElementById('btn-lyrics-mode');
@@ -110,14 +225,11 @@
   };
   if (window.MurielCore) preferWordLyrics(); else window.addEventListener('muriel:ready', preferWordLyrics, { once: true });
 
-  // lyrics tools (edit / sync / translate / fullscreen) move up next to the Line/Word button,
-  // so the lyrics get that row back; same buttons, so their handlers keep working
   const tools = panel.querySelector('.lyrics-header-actions');
   const topRow = panel.querySelector('.right-panel-header-actions');
   if (tools && topRow) { topRow.prepend(tools); tools.classList.add('np-tools-moved'); }
 
-  // like button next to the title in Now Playing (the player bar's heart is hidden on phones);
-  // it presses the real one and mirrors its state
+  // ---------- 4. Like Button in Now Playing & on Spotify Mini-Player ----------
   const realFav = document.getElementById('btn-toggle-fav');
   const favIcon = document.getElementById('fav-icon');
   const titleRow = panel.querySelector('.right-panel-title-row');
@@ -127,24 +239,43 @@
     like.type = 'button';
     like.setAttribute('aria-label', 'Like');
     like.innerHTML = favIcon.outerHTML.replace('id="fav-icon"', '');
-    const mirror = () => { const on = favIcon.getAttribute('fill') === 'currentColor'; like.classList.toggle('on', on); like.querySelector('svg').setAttribute('fill', on ? 'currentColor' : 'none'); };
-    like.addEventListener('click', () => {
+
+    // Also add a Spotify-style heart button right on the mini-player!
+    const miniLike = document.createElement('button');
+    miniLike.id = 'mini-like';
+    miniLike.className = 'mini-like-btn';
+    miniLike.type = 'button';
+    miniLike.setAttribute('aria-label', 'Like song');
+    miniLike.innerHTML = favIcon.outerHTML.replace('id="fav-icon"', '');
+    const playbarCenter = playbar.querySelector('.playbar-center');
+    if (playbarCenter) playbar.insertBefore(miniLike, playbarCenter);
+
+    const mirror = () => {
+      const on = favIcon.getAttribute('fill') === 'currentColor';
+      like.classList.toggle('on', on);
+      like.querySelector('svg')?.setAttribute('fill', on ? 'currentColor' : 'none');
+      miniLike.classList.toggle('on', on);
+      miniLike.querySelector('svg')?.setAttribute('fill', on ? 'currentColor' : 'none');
+    };
+    const triggerLike = (btn) => {
       realFav.click();
-      like.classList.remove('pop'); void like.offsetWidth; like.classList.add('pop');
+      btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
       if (navigator.vibrate) navigator.vibrate(12);
-    });
+    };
+    like.addEventListener('click', () => triggerLike(like));
+    miniLike.addEventListener('click', (e) => { e.stopPropagation(); triggerLike(miniLike); });
     new MutationObserver(mirror).observe(favIcon, { attributes: true, attributeFilter: ['fill'] });
     titleRow.appendChild(like);
     mirror();
   }
 
-  // slowly drifting colour glow behind Now Playing (cover colours, plain gradients: cheap to draw)
+  // Ambient colour glow behind Now Playing
   const ambient = document.createElement('div');
   ambient.className = 'np-ambient';
   ambient.innerHTML = '<i></i><i></i><i></i>';
   panel.prepend(ambient);
 
-  // swipe the cover left/right to skip, with the cover following your finger
+  // Swipe the cover left/right to skip
   const cover = document.getElementById('cover-container');
   if (cover) {
     let x0 = null, y0 = null, dx = 0, horizontal = null;
@@ -177,7 +308,7 @@
     });
   }
 
-  // mini player progress line
+  // Mini player progress line
   if (audio) {
     const tick = () => {
       if (document.hidden) return;
@@ -189,7 +320,7 @@
     document.addEventListener('visibilitychange', tick);
   }
 
-  // phone-only settings in Storage: cache size limit and sharing the error log
+  // Storage settings
   const storageGroup = document.querySelector('.settings-section[data-cat="storage"] .m3-group');
   if (storageGroup) {
     const limits = [['1024', '1 GB'], ['2048', '2 GB'], ['5120', '5 GB'], ['10240', '10 GB']];
@@ -209,7 +340,6 @@
     limitRow.querySelectorAll('[data-limit]').forEach((b) => b.addEventListener('click', () => {
       localStorage.setItem('muriel_cache_limit_mb', b.dataset.limit);
       limitRow.querySelectorAll('[data-limit]').forEach((x) => x.classList.toggle('active', x === b));
-      // a lower limit applies now, not only after the next download
       if (window.MurielCache) window.MurielCache.enforceLimit();
     }));
     const logRow = document.createElement('div');
@@ -223,13 +353,13 @@
         <button class="btn-pill-primary" type="button">Share</button>
       </div>`;
     logRow.querySelector('button').addEventListener('click', async () => {
-      const res = await window.electronAPI.shareText('Muriel error log', window.MurielLog ? window.MurielLog.text() : 'no log');
+      const res = await window.electronAPI.shareText('Violet error log', window.MurielLog ? window.MurielLog.text() : 'no log');
       if (res === 'copied' && window.MurielCore) window.MurielCore.toast('Log copied to clipboard', 'info');
     });
     storageGroup.append(limitRow, logRow);
   }
 
-  // iPhone: lyrics on the lock screen and in the Dynamic Island (mobile/live-activity.js)
+  // Live Activities on iPhone lock screen & Dynamic Island
   const trRow = document.getElementById('btn-tr-enabled') && document.getElementById('btn-tr-enabled').closest('.setting-item');
   if (window.MurielLiveActivity && trRow) {
     const la = window.MurielLiveActivity;
@@ -250,23 +380,20 @@
       la.setEnabled(on);
     });
     la.available().then((ok) => {
-      if (!ok) row.querySelector('.la-hint').textContent = 'Turn on Live Activities for Muriel in the iPhone Settings app first (needs iOS 16.2 or newer).';
+      if (!ok) row.querySelector('.la-hint').textContent = 'Turn on Live Activities for Violet in the iPhone Settings app first (needs iOS 16.2 or newer).';
     });
     trRow.parentElement.insertBefore(row, trRow);
   }
 
-  // artist bio is clamped to 3 lines on phones; tapping it expands / collapses
   const bio = document.getElementById('artist-profile-bio');
   if (bio) bio.addEventListener('click', () => bio.classList.toggle('expanded'));
 
-  // settings that only make sense on desktop
   ['btn-hw-accel', 'btn-tray-on-close', 'btn-media-keys'].forEach((id) => {
     const row = document.getElementById(id) && document.getElementById(id).closest('.setting-item');
     if (row) row.style.display = 'none';
   });
 })();
 
-// a write to the phone's storage failed (usually: storage full); say so instead of losing it silently
 (() => {
   let last = 0;
   window.addEventListener('muriel:storage-error', () => {

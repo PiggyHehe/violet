@@ -6,7 +6,7 @@
   const CHECK_EVERY = 6 * 3600 * 1000;
   const SNOOZE = 3 * 24 * 3600 * 1000;
   const TAGS = { ios: 'ios-latest', android: 'android-latest', windows: 'windows-latest' };
-  const ASSETS = { android: 'Muriel.apk', windows: 'Muriel.exe' }; // iOS goes to the release page (sideload)
+  const ASSETS = { android: 'Violet.apk', windows: 'Violet.exe' }; // iOS goes to the release page (sideload)
   const store = {
     get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
