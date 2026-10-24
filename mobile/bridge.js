@@ -94,6 +94,8 @@ const abortError = () => new DOMException('The operation was aborted.', 'AbortEr
 
 const fileUrls = new Map();
 async function fileUrlFor(vpath) {
+  const memUrl = fs._getBlobUrl && fs._getBlobUrl(vpath);
+  if (memUrl) return memUrl;
   if (!fileUrls.has(vpath)) {
     await fs._flush(); // a just-written file must reach disk before the WebView reads it
     fileUrls.set(vpath, store.fileUrl(vpath, mimeOf(vpath)));

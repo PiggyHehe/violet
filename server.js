@@ -1456,14 +1456,18 @@ async function prefetchTrack(trackUrl, trackId, platform, meta = null) {
     cleanId = cleanTrackId(trackUrl.split('v=')[1].split('&')[0]);
   }
   const cacheKey = (cleanId || trackUrl || '').toLowerCase();
-  if (!cacheKey || prefetchingSet.size > 2) return;
+  if (!cacheKey || prefetchingSet.size > 5) return;
   const isCached = (cleanId && await findCachedFile(cleanId)) || streamUrlCache.has(cacheKey) || (cleanId && streamUrlCache.has(cleanId));
   if (isCached || prefetchingSet.has(cacheKey)) return;
   if (STREAM_VIA_CACHE) {
-    // only pre-download songs the app is about to play (it sends their metadata); skip speculative
-    // search-result prefetches, which would cost a whole download on mobile data
-    if (!cleanId || !meta || !meta.title) return;
-    if (platform === 'youtube' && (!trackUrl || !trackUrl.startsWith('http'))) trackUrl = `https://www.youtube.com/watch?v=${cleanId}`;
+    if (platform === 'youtube' && (!trackUrl || !trackUrl.startsWith('http')) && cleanId) trackUrl = `https://www.youtube.com/watch?v=${cleanId}`;
+    if (!cleanId || !meta || !meta.title) {
+      if (trackUrl && isSafeMediaUrl(trackUrl)) {
+        prefetchingSet.add(cacheKey);
+        try { await executeYtDlp(['--no-config', '-g', '--', trackUrl], 12000); } catch (_) {} finally { prefetchingSet.delete(cacheKey); }
+      }
+      return;
+    }
     prefetchingSet.add(cacheKey);
     try { await downloadTrackToDisk(trackUrl, cleanId, platform, meta); } finally { prefetchingSet.delete(cacheKey); }
     return;

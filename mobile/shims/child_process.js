@@ -50,10 +50,13 @@ async function searchJson(target, limit) {
   return JSON.stringify({ entries });
 }
 
-// Fetches every segment of an HLS media playlist (4 at a time) and joins them into one .aac file.
-async function downloadHls(playlistUrl, headers, signal) {
-  const m3u = await (await globalThis.__murielFetch(playlistUrl, { headers, signal })).text();
-  const urls = m3u.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#')).map((l) => new URL(l, playlistUrl).href);
+// Fetches every segment of an HLS media playlist (16 at a time over HTTP/2) and joins them into one .aac file.
+async function downloadHls(playlistUrl, headers, signal, preloadedUrls) {
+  let urls = preloadedUrls;
+  if (!urls || !urls.length) {
+    const m3u = await (await globalThis.__murielFetch(playlistUrl, { headers, signal })).text();
+    urls = m3u.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#')).map((l) => new URL(l, playlistUrl).href);
+  }
   const parts = new Array(urls.length);
   let next = 0;
   // once one segment has failed for good (or the download was cancelled) the other workers stop too,
@@ -73,12 +76,12 @@ async function downloadHls(playlistUrl, headers, signal) {
         } catch (e) {
           // a 403/404 won't change on retry
           if (attempt >= 2 || failed || (signal && signal.aborted) || (e.status >= 400 && e.status < 500)) throw (failed = failed || e);
-          await new Promise((res) => setTimeout(res, 600 * (attempt + 1)));
+          await new Promise((res) => setTimeout(res, 250 * (attempt + 1)));
         }
       }
     }
   };
-  await Promise.all(Array.from({ length: Math.min(4, urls.length) }, worker));
+  await Promise.all(Array.from({ length: Math.min(16, urls.length) }, worker));
   return segmentsToAac(parts);
 }
 
@@ -89,15 +92,17 @@ async function download(args, target, signal) {
   let out = opt(args, '-o');
   // yt-dlp templates: the user-facing download keeps the real container (no ffmpeg on iOS to convert)
   out = out.includes('%(ext)s') ? out.replace('%(ext)s', audio.ext) : out;
-  let size;
   if (audio.kind === 'hls') {
-    const bytes = await downloadHls(audio.url, audio.headers, signal);
-    await store.writeBytes(out, bytes);
-    size = bytes.length;
+    const bytes = await downloadHls(audio.url, audio.headers, signal, audio.segmentUrls);
+    const blobUrl = (typeof URL !== 'undefined' && URL.createObjectURL && typeof Blob !== 'undefined')
+      ? URL.createObjectURL(new Blob([bytes], { type: 'audio/aac' }))
+      : null;
+    // Register with in-memory blobUrl immediately so playback starts in 0ms while disk write runs in background
+    fs._register(out, bytes.length, blobUrl, bytes);
   } else {
-    size = await store.download(audio.url, out, audio.headers || { 'User-Agent': 'Mozilla/5.0' });
+    const size = await store.download(audio.url, out, audio.headers || { 'User-Agent': 'Mozilla/5.0' });
+    fs._register(out, size);
   }
-  fs._register(out, size);
   enforceCacheLimit();
   return '';
 }

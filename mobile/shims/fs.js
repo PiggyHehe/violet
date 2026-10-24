@@ -1,12 +1,15 @@
 // Node `fs` for the iOS build. server.js mixes sync and async calls, so every file lives in an
-// in-memory index (text files keep their contents; audio/images only size + mtime) and writes go
-// through to the store in the background. init() must finish before server.js is required.
+// in-memory index (text files keep their contents; audio/images only size + mtime + optional fast blobUrl)
+// and writes go through to the store in the background. init() must finish before server.js is required.
 const path = require('path');
 const store = require('./store');
 
 const TEXT_EXT = /\.(json|lrc|txt)$/i;
-const nodes = new Map(); // vpath -> { isDir, size, mtimeMs, text? }
+const nodes = new Map(); // vpath -> { isDir, size, mtimeMs, text?, blobUrl? }
+const activeBlobs = []; // FIFO of recent blobUrls to cap RAM usage
+const MAX_ACTIVE_BLOBS = 8;
 let chain = Promise.resolve();
+
 // a failed write (storage full) used to look saved until the next launch: log it and tell the app
 const persist = (fn) => {
   chain = chain.then(fn).catch((e) => {
@@ -15,6 +18,18 @@ const persist = (fn) => {
   });
   return chain;
 };
+
+function trackBlobUrl(blobUrl) {
+  if (!blobUrl) return;
+  activeBlobs.push(blobUrl);
+  while (activeBlobs.length > MAX_ACTIVE_BLOBS) {
+    const oldUrl = activeBlobs.shift();
+    for (const n of nodes.values()) {
+      if (n && n.blobUrl === oldUrl) n.blobUrl = null;
+    }
+    try { URL.revokeObjectURL(oldUrl); } catch (_) {}
+  }
+}
 
 const norm = (p) => path.resolve('/', String(p).replace(/\\/g, '/'));
 const err = (code, p) => Object.assign(new Error(`${code}: ${p}`), { code, path: p });
@@ -64,7 +79,12 @@ function writeSyncImpl(p, data) {
 }
 
 function removeTree(p) {
-  for (const k of [...nodes.keys()]) if (k === p || k.startsWith(p + '/')) nodes.delete(k);
+  for (const [k, n] of [...nodes.entries()]) {
+    if (k === p || k.startsWith(p + '/')) {
+      if (n && n.blobUrl) { try { URL.revokeObjectURL(n.blobUrl); } catch (_) {} }
+      nodes.delete(k);
+    }
+  }
 }
 
 const fs = {
@@ -79,11 +99,21 @@ const fs = {
     }));
   },
 
-  // Called by the stream bridge after a native download lands on disk.
-  _register(p, size) {
+  // Called by the stream bridge after a native download lands on disk or in memory.
+  // When rawBytes is provided, disk persistence is queued in the background while blobUrl is ready immediately.
+  _register(p, size, blobUrl = null, rawBytes = null) {
     p = norm(p);
     ensureParents(p);
-    nodes.set(p, { isDir: false, size, mtimeMs: Date.now() });
+    nodes.set(p, { isDir: false, size, mtimeMs: Date.now(), blobUrl });
+    if (rawBytes) {
+      persist(() => store.writeBytes(p, rawBytes)).then(() => trackBlobUrl(blobUrl));
+    } else if (blobUrl) {
+      trackBlobUrl(blobUrl);
+    }
+  },
+  _getBlobUrl(p) {
+    const n = nodes.get(norm(p));
+    return (n && n.blobUrl) || null;
   },
   _flush: () => chain,
 
@@ -126,7 +156,9 @@ const fs = {
   },
   unlinkSync(p) {
     p = norm(p);
-    if (!nodes.has(p)) throw err('ENOENT', p);
+    const n = nodes.get(p);
+    if (!n) throw err('ENOENT', p);
+    if (n.blobUrl) { try { URL.revokeObjectURL(n.blobUrl); } catch (_) {} }
     nodes.delete(p);
     persist(() => store.remove(p, false));
   },

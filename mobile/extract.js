@@ -60,18 +60,36 @@ async function ytMusicSearch(query, limit) {
 // without a proof-of-origin token, unlike direct googlevideo files, which now 403 after the first MB
 // for most clients. Same approach yt-dlp uses. Needs a visitor id or YouTube asks to "sign in".
 const VOS_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15';
-let visitorId = null;
-let visitorAt = 0;
-// a fresh id is fetched at most every 10 minutes: under YouTube's bot check every tap (and every retry and
-// alternate upload) used to download the whole YouTube homepage again
+let visitorId = (() => { try { return localStorage.getItem('violet_yt_visitor_id') || null; } catch (e) { return null; } })();
+let visitorAt = (() => { try { return Number(localStorage.getItem('violet_yt_visitor_at')) || 0; } catch (e) { return 0; } })();
+let visitorInFlight = null;
 const VISITOR_REFRESH_MS = 10 * 60 * 1000;
 const visitorIsFresh = () => !!visitorId && Date.now() - visitorAt < VISITOR_REFRESH_MS;
+
 async function getVisitorId(force) {
   if (visitorId && (!force || visitorIsFresh())) return visitorId;
-  const html = await (await globalThis.__murielFetch('https://www.youtube.com/', { headers: { 'User-Agent': VOS_UA, 'Accept-Language': 'en-US' } })).text();
-  visitorId = (html.match(/"VISITOR_DATA":"([^"]+)"/) || [])[1] || null;
-  visitorAt = Date.now();
-  return visitorId;
+  if (visitorInFlight && !force) return visitorInFlight;
+  visitorInFlight = (async () => {
+    try {
+      // Fast ~2 KB endpoint vs 1.5 MB full YouTube desktop homepage
+      const sw = await (await globalThis.__murielFetch('https://www.youtube.com/sw.js_data', { headers: { 'User-Agent': VOS_UA, 'Accept-Language': 'en-US' } })).text();
+      const fast = (sw.match(/"([A-Za-z0-9_-]{11,}%3D%3D)"/) || sw.match(/"VISITOR_DATA":"([^"]+)"/) || [])[1];
+      if (fast) {
+        visitorId = fast;
+        visitorAt = Date.now();
+        try { localStorage.setItem('violet_yt_visitor_id', visitorId); localStorage.setItem('violet_yt_visitor_at', String(visitorAt)); } catch (e) {}
+        return visitorId;
+      }
+    } catch (e) {}
+    const html = await (await globalThis.__murielFetch('https://www.youtube.com/', { headers: { 'User-Agent': VOS_UA, 'Accept-Language': 'en-US' } })).text();
+    visitorId = (html.match(/"VISITOR_DATA":"([^"]+)"/) || [])[1] || null;
+    visitorAt = Date.now();
+    if (visitorId) {
+      try { localStorage.setItem('violet_yt_visitor_id', visitorId); localStorage.setItem('violet_yt_visitor_at', String(visitorAt)); } catch (e) {}
+    }
+    return visitorId;
+  })().finally(() => { visitorInFlight = null; });
+  return visitorInFlight;
 }
 
 async function youtubeHlsAudio(id) {
@@ -86,7 +104,6 @@ async function youtubeHlsAudio(id) {
     const j = await (await globalThis.__murielFetch('https://www.youtube.com/youtubei/v1/player?prettyPrint=false', { method: 'POST', headers, body: JSON.stringify(body) })).json();
     const master = j.streamingData && j.streamingData.hlsManifestUrl;
     if (!master) {
-      // stale visitor id: try once with a new one, unless the current one is new already (then a refresh won't help)
       if (j.playabilityStatus && j.playabilityStatus.status === 'LOGIN_REQUIRED' && !force && !visitorIsFresh()) continue;
       throw new Error((j.playabilityStatus && j.playabilityStatus.reason) || 'no HLS stream');
     }
@@ -94,8 +111,14 @@ async function youtubeHlsAudio(id) {
     const pick = (itag) => (m3u.match(new RegExp(`#EXT-X-MEDIA:[^\\n]*URI="([^"]+/itag/${itag}/[^"]*)"`)) || [])[1];
     const playlist = pick(234) || pick(233);
     if (!playlist) throw new Error('no audio rendition');
+    // Pre-fetch and parse segment URLs so downloadHls doesn't need an extra round-trip
+    let segmentUrls = null;
+    try {
+      const segM3u = await (await globalThis.__murielFetch(playlist, { headers: { 'User-Agent': VOS_UA } })).text();
+      segmentUrls = segM3u.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#')).map((l) => new URL(l, playlist).href);
+    } catch (e) {}
     const d = j.videoDetails || {};
-    return { kind: 'hls', url: playlist, headers: { 'User-Agent': VOS_UA }, ext: 'aac', artist: (d.author || '').replace(/\s*-\s*Topic$/i, ''), title: d.title, duration: Number(d.lengthSeconds) || 0 };
+    return { kind: 'hls', url: playlist, segmentUrls, headers: { 'User-Agent': VOS_UA }, ext: 'aac', artist: (d.author || '').replace(/\s*-\s*Topic$/i, ''), title: d.title, duration: Number(d.lengthSeconds) || 0 };
   }
   throw new Error('YouTube refused the request');
 }
@@ -112,7 +135,6 @@ async function youtubeAudio(id) {
       const pick = formats.filter((f) => /mp4/.test(f.mime_type)).sort((a, b) => b.bitrate - a.bitrate)[0] || formats.sort((a, b) => b.bitrate - a.bitrate)[0];
       if (!pick) throw new Error('no audio format');
       const url = pick.url || await pick.decipher(y.session.player);
-      // googlevideo ties the URL to the client that asked for it; download with the same User-Agent
       const ua = (Constants.CLIENTS[client] && Constants.CLIENTS[client].USER_AGENT) || 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148';
       return { url, headers: { 'User-Agent': ua }, ext: /mp4/.test(pick.mime_type) ? 'm4a' : 'webm', artist: text(info.basic_info.author).replace(/\s*-\s*Topic$/i, ''), title: info.basic_info.title, duration: info.basic_info.duration };
     } catch (e) { lastErr = e; }
@@ -121,14 +143,18 @@ async function youtubeAudio(id) {
 }
 
 // ---- SoundCloud (public api-v2 with the web client's client_id) ----
-let scClientId = null;
+let scClientId = (() => { try { return localStorage.getItem('violet_sc_client_id') || null; } catch (e) { return null; } })();
 async function scId(force) {
   if (scClientId && !force) return scClientId;
   const html = await (await globalThis.__murielFetch('https://soundcloud.com/', { headers: { 'User-Agent': DESKTOP_UA } })).text();
   const scripts = [...html.matchAll(/<script[^>]+src="(https:\/\/a-v2\.sndcdn\.com\/assets\/[^"]+\.js)"/g)].map((m) => m[1]).reverse();
   for (const s of scripts) {
     const m = (await (await globalThis.__murielFetch(s)).text()).match(/client_id\s*[:=]\s*"([a-zA-Z0-9]{20,})"/);
-    if (m) return (scClientId = m[1]);
+    if (m) {
+      scClientId = m[1];
+      try { localStorage.setItem('violet_sc_client_id', scClientId); } catch (e) {}
+      return scClientId;
+    }
   }
   throw new Error('SoundCloud client id not found');
 }
@@ -137,7 +163,7 @@ async function scApi(path) {
   for (const force of [false, true]) {
     const id = await scId(force);
     const r = await globalThis.__murielFetch(`https://api-v2.soundcloud.com${path}${path.includes('?') ? '&' : '?'}client_id=${id}`, { headers: { 'User-Agent': DESKTOP_UA } });
-    if (r.status === 401 || r.status === 403) continue; // client_id rotated
+    if (r.status === 401 || r.status === 403) continue;
     if (!r.ok) throw new Error(`SoundCloud ${r.status}`);
     return r.json();
   }
@@ -153,7 +179,6 @@ const scEntry = (t) => ({
   webpage_url: t.permalink_url,
 });
 
-// SoundCloud Go+ songs only stream a 30-second preview without a subscription
 const isPreview = (t) => t.policy === 'SNIP' || ((t.media && t.media.transcodings) || []).some((x) => x.snipped);
 
 async function soundcloudSearch(query, limit) {
@@ -172,8 +197,11 @@ async function soundcloudAudio(pageUrl) {
   return { url, ext: tc.format.protocol === 'progressive' ? 'mp3' : 'm3u8', artist: t.user && t.user.username, title: t.title, duration: Math.round(t.duration / 1000) };
 }
 
-// Resolve anything yt-dlp would accept as a target: a URL, ytsearch1:, scsearch1:.
-async function resolveAudio(target) {
+// In-memory resolved audio cache + in-flight deduplication (10 min TTL)
+const audioInfoCache = new Map();
+const AUDIO_CACHE_TTL = 10 * 60 * 1000;
+
+async function resolveAudioUncached(target) {
   const s = String(target);
   let m = s.match(/^(yt|sc)search\d*:(.*)$/);
   if (m) {
@@ -187,6 +215,35 @@ async function resolveAudio(target) {
   throw new Error(`unsupported target ${s}`);
 }
 
+async function resolveAudio(target) {
+  const key = ytId(target) || String(target);
+  const cached = audioInfoCache.get(key);
+  if (cached) {
+    if (cached.promise) return cached.promise;
+    if (Date.now() - cached.at < AUDIO_CACHE_TTL) return cached.value;
+    audioInfoCache.delete(key);
+  }
+  const promise = resolveAudioUncached(target).then((val) => {
+    audioInfoCache.set(key, { value: val, at: Date.now() });
+    if (audioInfoCache.size > 150) {
+      const oldest = audioInfoCache.keys().next().value;
+      if (oldest) audioInfoCache.delete(oldest);
+    }
+    return val;
+  }).catch((err) => {
+    audioInfoCache.delete(key);
+    throw err;
+  });
+  audioInfoCache.set(key, { promise });
+  return promise;
+}
+
+// Pre-warm YouTube visitor ID & session immediately on startup so the first song tap doesn't wait
+setTimeout(() => {
+  getVisitorId(false).catch(() => {});
+  yt().catch(() => {});
+}, 80);
+
 // ---- playlists (link import): yt-dlp-style { title, entries } ----
 async function youtubePlaylist(listId, limit) {
   const y = await yt();
@@ -197,7 +254,6 @@ async function youtubePlaylist(listId, limit) {
   const take = (p) => (p.videos || p.items || []).forEach((v) => {
     if (entries.length >= limit) return;
     if (v.type === 'LockupView') {
-      // newer playlist layout: id in content_id, title/channel in metadata, duration as a thumbnail badge
       if (v.content_type && v.content_type !== 'VIDEO') return;
       const md = v.metadata || {};
       const rows = (md.metadata && md.metadata.metadata_rows) || [];
@@ -228,7 +284,6 @@ async function soundcloudPlaylist(pageUrl, limit) {
   const set = await scApi(`/resolve?url=${encodeURIComponent(pageUrl)}`);
   if (set.kind === 'track') return { title: set.title, entries: [scEntry(set)] };
   const tracks = (set.tracks || []).slice(0, limit);
-  // long sets only carry full data for the first few tracks; fetch the rest by id
   const missing = tracks.filter((t) => !t.title).map((t) => t.id);
   const full = new Map(tracks.filter((t) => t.title).map((t) => [t.id, t]));
   for (let i = 0; i < missing.length; i += 50) {
