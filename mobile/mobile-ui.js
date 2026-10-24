@@ -1,8 +1,5 @@
-// Violet iOS layout & Spotify-inspired Liquid Glass UX on top of app.js:
-// - Time-of-day greeting, Spotify filter pills & 2-column quick-jump grid
-// - Labeled bottom navigation bar with Home icon
-// - Floating Liquid Glass mini-player with inline Like button & progress line
-// - Full-screen Now Playing sheet with swipe-to-dismiss, cover swipe-to-skip & active dot indicators
+// Violet iOS — Minimalist Native iPhone UI & Behaviour
+// Uses clean Lucide SVG iconography (24x24, 1.75px stroke, round caps/joins)
 
 (() => {
   if (!localStorage.getItem('muriel_font_scale')) localStorage.setItem('muriel_font_scale', '80');
@@ -21,43 +18,73 @@
   const audio = document.querySelector('audio');
   if (!panel || !playbar || !lyricsBtn) return;
 
-  // ---------- 1. Labeled Bottom Tab Bar & Spotify Home Icon ----------
-  const navDiscover = document.getElementById('nav-discover');
-  if (navDiscover) {
-    const ind = navDiscover.querySelector('.nav-indicator');
-    if (ind) {
-      ind.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1V9.5z"/></svg>`;
-    }
+  // Clean Lucide SVG helper (https://lucide.dev)
+  const lucide = (paths, size = 20, stroke = 1.75) =>
+    `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+
+  const ICONS = {
+    home: lucide('<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+    heart: lucide('<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>'),
+    playlists: lucide('<path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/>'),
+    library: lucide('<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>'),
+    clock: lucide('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 18),
+    settings: lucide('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'),
+    chevronDown: lucide('<path d="m6 9 6 6 6-6"/>', 22, 2),
+    stats: lucide('<line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>', 18),
+    radio: lucide('<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/>', 18),
+  };
+
+  // ---------- 1. Move Platform Switcher into Top Titlebar & Standardize Icons ----------
+  const titlebar = document.getElementById('titlebar');
+  const platformSwitch = document.querySelector('.platform-switch-container');
+  if (titlebar && platformSwitch) {
+    titlebar.appendChild(platformSwitch);
+    const ytSpan = document.querySelector('#platform-yt span');
+    const ytmSpan = document.querySelector('#platform-ytm span');
+    const scSpan = document.querySelector('#platform-sc span');
+    if (ytSpan) ytSpan.textContent = 'YT';
+    if (ytmSpan) ytmSpan.textContent = 'Music';
+    if (scSpan) scSpan.textContent = 'SC';
   }
 
-  const navLabels = [
-    ['nav-discover', 'Home'],
-    ['nav-favorites', 'Liked'],
-    ['btn-toggle-playlists-drawer', 'Playlists'],
-    ['nav-local', 'Library'],
-    ['nav-history', 'Recents'],
-    ['nav-settings', 'Settings'],
+  // ---------- 2. 5-Tab Native iOS Bottom Tab Bar with Lucide Icons ----------
+  const tabConfig = [
+    ['nav-discover', 'Home', ICONS.home],
+    ['nav-favorites', 'Liked', ICONS.heart],
+    ['btn-toggle-playlists-drawer', 'Playlists', ICONS.playlists],
+    ['nav-local', 'Files', ICONS.library],
+    ['nav-settings', 'Settings', ICONS.settings],
   ];
-  navLabels.forEach(([id, text]) => {
+
+  tabConfig.forEach(([id, label, svg]) => {
     const btn = document.getElementById(id);
-    if (btn && !btn.querySelector('.violet-nav-label')) {
+    if (!btn) return;
+    const ind = btn.querySelector('.nav-indicator');
+    if (ind) {
+      const badge = ind.querySelector('.nav-badge');
+      ind.innerHTML = svg;
+      if (badge) ind.appendChild(badge);
+    } else {
+      btn.innerHTML = `<div class="nav-indicator">${svg}</div>`;
+    }
+    if (!btn.querySelector('.violet-nav-label')) {
       const span = document.createElement('span');
       span.className = 'violet-nav-label';
-      span.textContent = text;
+      span.textContent = label;
       btn.appendChild(span);
     }
   });
 
-  // ---------- 2. Spotify-Style Greeting, Filter Chips & 2-Col Quick Grid ----------
+  // ---------- 3. Minimalist Home Header, Filter Pills & 2x2 Quick Grid ----------
   const discoverEmpty = document.getElementById('discover-empty');
   if (discoverEmpty && !document.getElementById('violet-home-top')) {
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
     const waveLabel = document.querySelector('.my-wave-title');
-    if (waveLabel) waveLabel.textContent = 'Violet DJ Mix';
+    if (waveLabel) waveLabel.textContent = 'Daily Mix';
     const playWaveSpan = document.querySelector('#btn-play-my-wave span');
-    if (playWaveSpan) playWaveSpan.textContent = 'Play Mix';
+    if (playWaveSpan) playWaveSpan.textContent = 'Play';
 
     const topBlock = document.createElement('div');
     topBlock.id = 'violet-home-top';
@@ -66,45 +93,36 @@
       <div class="violet-greeting-row">
         <h1 class="violet-greeting-text">${greeting}</h1>
         <div class="violet-greeting-actions">
-          <button type="button" class="violet-icon-chip" id="violet-btn-wrapped" title="Violet Wrapped">
-            <svg width="16" height="16" viewBox="0 0 1024 1024" fill="currentColor"><path d="M512 32Q570 454 992 512Q570 570 512 992Q454 570 32 512Q454 454 512 32Z"/></svg>
-            <span>Wrapped</span>
+          <button type="button" class="violet-header-icon-btn" id="violet-btn-wrapped" title="Listening stats" aria-label="Listening stats">
+            ${ICONS.stats}
           </button>
-          <button type="button" class="violet-icon-chip" id="violet-btn-history" title="Recently played">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <button type="button" class="violet-header-icon-btn" id="violet-btn-history" title="Recently played" aria-label="Recently played">
+            ${ICONS.clock}
           </button>
         </div>
       </div>
       <div class="violet-filter-pills">
         <button type="button" class="violet-pill active" data-vpill="all">All</button>
-        <button type="button" class="violet-pill" data-vpill="favorites">Liked Songs</button>
+        <button type="button" class="violet-pill" data-vpill="favorites">Liked</button>
         <button type="button" class="violet-pill" data-vpill="playlists">Playlists</button>
-        <button type="button" class="violet-pill" data-vpill="local">Downloaded</button>
+        <button type="button" class="violet-pill" data-vpill="local">Files</button>
       </div>
       <div class="violet-quick-grid" id="violet-quick-grid">
         <button type="button" class="violet-quick-card" data-qaction="favorites">
-          <div class="violet-quick-art violet-art-liked">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          </div>
+          <div class="violet-quick-art">${ICONS.heart}</div>
           <span class="violet-quick-title">Liked Songs</span>
         </button>
         <button type="button" class="violet-quick-card" data-qaction="wave">
-          <div class="violet-quick-art violet-art-wave">
-            <svg width="20" height="20" viewBox="0 0 1024 1024" fill="currentColor"><path d="M500 160Q543.2 476.8 860 520Q543.2 563.2 500 880Q456.8 563.2 140 520Q456.8 476.8 500 160Z"/></svg>
-          </div>
-          <span class="violet-quick-title">Violet DJ Mix</span>
+          <div class="violet-quick-art">${ICONS.radio}</div>
+          <span class="violet-quick-title">Daily Mix</span>
         </button>
         <button type="button" class="violet-quick-card" data-qaction="playlists">
-          <div class="violet-quick-art violet-art-playlists">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15V6M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM12 12H3M16 6H3M12 18H3"/></svg>
-          </div>
-          <span class="violet-quick-title">Your Playlists</span>
+          <div class="violet-quick-art">${ICONS.playlists}</div>
+          <span class="violet-quick-title">Playlists</span>
         </button>
-        <button type="button" class="violet-quick-card" data-qaction="encore">
-          <div class="violet-quick-art violet-art-encore">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-          </div>
-          <span class="violet-quick-title">Violet Wrapped</span>
+        <button type="button" class="violet-quick-card" data-qaction="history">
+          <div class="violet-quick-art">${ICONS.clock}</div>
+          <span class="violet-quick-title">Recently Played</span>
         </button>
       </div>
     `;
@@ -131,18 +149,15 @@
         if (a === 'favorites') document.getElementById('nav-favorites')?.click();
         else if (a === 'wave') document.getElementById('btn-play-my-wave')?.click();
         else if (a === 'playlists') document.getElementById('btn-toggle-playlists-drawer')?.click();
-        else if (a === 'encore') {
-          if (window.MurielEncore) window.MurielEncore.open();
-          else document.getElementById('btn-open-encore')?.click();
-        }
+        else if (a === 'history') document.getElementById('nav-history')?.click();
       });
     });
   }
 
-  // ---------- 3. Now Playing Sheet & Close Chevron ----------
+  // ---------- 4. Now Playing Sheet & Close Chevron ----------
   const closeBtn = document.getElementById('btn-close-right-panel');
   if (closeBtn) {
-    closeBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+    closeBtn.innerHTML = ICONS.chevronDown;
   }
 
   const sync = () => document.body.classList.toggle('np-open', !panel.classList.contains('hidden'));
@@ -158,7 +173,7 @@
     openSheet();
   });
 
-  // Swipe down on the sheet's top area to close it
+  // Swipe down on the sheet to close
   let startY = null;
   panel.addEventListener('touchstart', (e) => {
     const t = e.touches[0];
@@ -217,7 +232,6 @@
   };
   if (window.MurielCore) fixPickedMedia(); else window.addEventListener('muriel:ready', fixPickedMedia, { once: true });
 
-  // Phones default to word-by-word karaoke
   const preferWordLyrics = () => {
     const st = window.MurielCore && window.MurielCore.state;
     const btn = document.getElementById('btn-lyrics-mode');
@@ -229,7 +243,7 @@
   const topRow = panel.querySelector('.right-panel-header-actions');
   if (tools && topRow) { topRow.prepend(tools); tools.classList.add('np-tools-moved'); }
 
-  // ---------- 4. Like Button in Now Playing & on Spotify Mini-Player ----------
+  // ---------- 5. Like Button in Now Playing & on Mini-Player ----------
   const realFav = document.getElementById('btn-toggle-fav');
   const favIcon = document.getElementById('fav-icon');
   const titleRow = panel.querySelector('.right-panel-title-row');
@@ -238,15 +252,14 @@
     like.id = 'np-like';
     like.type = 'button';
     like.setAttribute('aria-label', 'Like');
-    like.innerHTML = favIcon.outerHTML.replace('id="fav-icon"', '');
+    like.innerHTML = ICONS.heart;
 
-    // Also add a Spotify-style heart button right on the mini-player!
     const miniLike = document.createElement('button');
     miniLike.id = 'mini-like';
     miniLike.className = 'mini-like-btn';
     miniLike.type = 'button';
     miniLike.setAttribute('aria-label', 'Like song');
-    miniLike.innerHTML = favIcon.outerHTML.replace('id="fav-icon"', '');
+    miniLike.innerHTML = ICONS.heart;
     const playbarCenter = playbar.querySelector('.playbar-center');
     if (playbarCenter) playbar.insertBefore(miniLike, playbarCenter);
 
@@ -260,7 +273,7 @@
     const triggerLike = (btn) => {
       realFav.click();
       btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
-      if (navigator.vibrate) navigator.vibrate(12);
+      if (navigator.vibrate) navigator.vibrate(10);
     };
     like.addEventListener('click', () => triggerLike(like));
     miniLike.addEventListener('click', (e) => { e.stopPropagation(); triggerLike(miniLike); });
@@ -269,10 +282,10 @@
     mirror();
   }
 
-  // Ambient colour glow behind Now Playing
+  // Subtle ambient wash behind Now Playing
   const ambient = document.createElement('div');
   ambient.className = 'np-ambient';
-  ambient.innerHTML = '<i></i><i></i><i></i>';
+  ambient.innerHTML = '<i></i>';
   panel.prepend(ambient);
 
   // Swipe the cover left/right to skip
@@ -285,23 +298,23 @@
       dx = e.touches[0].clientX - x0;
       const dy = e.touches[0].clientY - y0;
       if (horizontal === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) horizontal = Math.abs(dx) > Math.abs(dy);
-      if (horizontal) cover.style.transform = `translateX(${dx}px) rotate(${dx / 40}deg)`;
+      if (horizontal) cover.style.transform = `translateX(${dx}px)`;
     }, { passive: true });
     cover.addEventListener('touchend', () => {
       if (x0 === null) return;
       x0 = null;
-      cover.style.transition = 'transform .32s cubic-bezier(.2,.8,.2,1), opacity .32s';
+      cover.style.transition = 'transform .28s cubic-bezier(.2,.8,.2,1), opacity .28s';
       if (horizontal && Math.abs(dx) > 70) {
         const dir = dx < 0 ? -1 : 1;
-        cover.style.transform = `translateX(${dir * window.innerWidth}px) rotate(${dir * 12}deg)`;
+        cover.style.transform = `translateX(${dir * window.innerWidth}px)`;
         cover.style.opacity = '0';
         if (navigator.vibrate) navigator.vibrate(10);
         setTimeout(() => {
           if (dir < 0) document.getElementById('btn-next').click(); else document.getElementById('btn-prev').click();
           cover.style.transition = 'none';
-          cover.style.transform = `translateX(${-dir * 60}px)`;
-          requestAnimationFrame(() => { cover.style.transition = 'transform .38s cubic-bezier(.2,.8,.2,1), opacity .38s'; cover.style.transform = ''; cover.style.opacity = ''; });
-        }, 220);
+          cover.style.transform = `translateX(${-dir * 40}px)`;
+          requestAnimationFrame(() => { cover.style.transition = 'transform .32s cubic-bezier(.2,.8,.2,1), opacity .32s'; cover.style.transform = ''; cover.style.opacity = ''; });
+        }, 200);
       } else {
         cover.style.transform = '';
       }
