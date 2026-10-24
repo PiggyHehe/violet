@@ -1,135 +1,110 @@
 /* ============================================================================
-   VIOLET — Minimalist Native iOS Design System
-   Zero glow · Flat / Frosted Surfaces · Crisp Lucide Iconography · iPhone-Fitted
+   VIOLET — Minimalist Native iPhone UI (Complete Mobile Stylesheet)
+   Zero Glow · Flat Carbon Surfaces · Crisp Lucide Iconography · iPhone-Fitted
    ============================================================================ */
 
+html.is-mobile,
 :root {
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
+  --tabbar-h: 56px;
+  --mini-h: 60px;
+  --chrome-bottom: calc(var(--tabbar-h) + var(--mini-h) + var(--safe-bottom) + 12px);
 
-  --tabbar-h: calc(56px + var(--safe-bottom));
-  --miniplayer-h: 58px;
-
-  /* Minimalist Carbon & Violet Tokens (No Neon Glow, No Gradients) */
+  /* Minimalist Carbon & Violet Palette */
   --v-bg: #09090B;
-  --v-surface-1: #121215;
-  --v-surface-2: #1A1A1F;
-  --v-surface-3: #24242B;
-  --v-border: rgba(255, 255, 255, 0.07);
-  --v-border-strong: rgba(255, 255, 255, 0.12);
+  --v-surface-1: #141418;
+  --v-surface-2: #1C1C22;
+  --v-surface-3: #26262E;
+  --v-border: rgba(255, 255, 255, 0.08);
+  --v-border-strong: rgba(255, 255, 255, 0.14);
 
   --v-text-1: #FAFAFA;
   --v-text-2: #A1A1AA;
   --v-text-3: #71717A;
-
   --v-accent: #8B5CF6;
-  --v-accent-soft: rgba(139, 92, 246, 0.14);
+  --v-accent-soft: rgba(139, 92, 246, 0.16);
 
-  /* Override desktop Material You variables */
+  /* Safe Material token overrides (dark surfaces, crisp foreground) */
   --md-sys-color-background: #09090B !important;
   --md-sys-color-surface: #09090B !important;
   --md-sys-color-surface-dim: #09090B !important;
   --md-sys-color-surface-container-lowest: #09090B !important;
-  --md-sys-color-surface-container-low: #121215 !important;
-  --md-sys-color-surface-container: #121215 !important;
-  --md-sys-color-surface-container-high: #1A1A1F !important;
-  --md-sys-color-surface-container-highest: #24242B !important;
-  --md-sys-color-primary: #FAFAFA !important;
-  --md-sys-color-on-primary: #09090B !important;
-  --md-sys-color-primary-container: #1A1A1F !important;
+  --md-sys-color-surface-container-low: #121216 !important;
+  --md-sys-color-surface-container-low-solid: #121216 !important;
+  --md-sys-color-surface-container: #141418 !important;
+  --md-sys-color-surface-container-solid: #141418 !important;
+  --md-sys-color-surface-container-high: #1C1C22 !important;
+  --md-sys-color-surface-container-highest: #24242C !important;
+  --md-sys-color-surface-container-highest-solid: #24242C !important;
+  --md-sys-color-primary: #8B5CF6 !important;
+  --md-sys-color-on-primary: #FAFAFA !important;
+  --md-sys-color-primary-container: #1C1C22 !important;
   --md-sys-color-on-primary-container: #FAFAFA !important;
-  --md-sys-color-secondary-container: #1A1A1F !important;
+  --md-sys-color-secondary-container: #24242C !important;
   --md-sys-color-on-secondary-container: #FAFAFA !important;
   --md-sys-color-on-surface: #FAFAFA !important;
+  --md-sys-color-on-surface-solid: #FAFAFA !important;
   --md-sys-color-on-surface-variant: #A1A1AA !important;
-  --md-sys-color-outline: #52525B !important;
-  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.07) !important;
+  --md-sys-color-outline: #71717A !important;
+  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.08) !important;
+
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Global Reset for iPhone Viewport */
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+html.is-mobile body {
   overscroll-behavior: none;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  user-select: none;
-  -webkit-user-select: none;
+  touch-action: manipulation;
   background: var(--v-bg) !important;
   color: var(--v-text-1) !important;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif !important;
-  letter-spacing: -0.012em;
   -webkit-font-smoothing: antialiased;
 }
 
-input, textarea {
-  user-select: text;
-  -webkit-user-select: text;
-  font-size: 16px !important; /* Prevents iOS auto-zoom on focus */
-}
-
-/* Strip all decorative background blobs, meshes, and glows */
-.m3-organic-bg,
-.bg-mesh-layer,
-#bg-mesh-a,
-#bg-mesh-b,
-#fx-root,
-#home-ambient,
-.my-wave-ambient-light,
-.logo-star,
-#titlebar-logo-dot,
-.titlebar-controls,
-.nav-active-indicator,
-.rail-divider,
-.rail-action-group,
-.visualizer-container,
-.volume-control-group,
-#btn-mini-player,
-#btn-minimize,
-#btn-maximize,
-#btn-close {
+/* Strip decorative background blobs, meshes, and neon glows */
+html.is-mobile .m3-organic-bg,
+html.is-mobile .bg-mesh-layer,
+html.is-mobile #bg-mesh-a,
+html.is-mobile #bg-mesh-b,
+html.is-mobile #fx-root,
+html.is-mobile #home-ambient,
+html.is-mobile .my-wave-ambient-light,
+html.is-mobile .np-ambient,
+html.is-mobile .logo-star,
+html.is-mobile #titlebar-logo-dot,
+html.is-mobile .titlebar-controls,
+html.is-mobile #btn-mini-player,
+html.is-mobile #visualizer-container,
+html.is-mobile #mini-visualizer,
+html.is-mobile .setting-item:has(#toggle-m3-cover) {
   display: none !important;
 }
 
-/* Zero Glows Globally */
-*, *::before, *::after {
+html.is-mobile *,
+html.is-mobile *::before,
+html.is-mobile *::after {
   text-shadow: none !important;
 }
 
 /* ============================================================================
-   1. COMPACT iPHONE TOP HEADER (#titlebar + .top-nav)
+   1. TOP HEADER (#titlebar + Platform Segmented Switch + .top-nav Search)
    ============================================================================ */
-#titlebar {
+html.is-mobile .titlebar {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  height: calc(44px + var(--safe-top)) !important;
-  padding: var(--safe-top) 16px 0 16px !important;
+  height: auto !important;
+  min-height: 40px !important;
+  padding: calc(var(--safe-top) + 6px) 16px 6px 16px !important;
   background: var(--v-bg) !important;
   border: none !important;
-  position: relative !important;
-  z-index: 30 !important;
   -webkit-app-region: no-drag !important;
+  z-index: 30 !important;
 }
 
-.titlebar-drag {
-  display: flex !important;
-  align-items: center !important;
-}
-
-.app-logo {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0 !important;
-}
-
-.logo-text {
-  font-size: 20px !important;
+html.is-mobile .logo-text {
+  font-size: 21px !important;
   font-weight: 700 !important;
   letter-spacing: -0.03em !important;
   color: var(--v-text-1) !important;
@@ -137,28 +112,33 @@ input, textarea {
   -webkit-text-fill-color: var(--v-text-1) !important;
 }
 
-/* Compact Segmented Platform Switch inside #titlebar */
-.platform-switch-container {
-  margin: 0 !important;
+/* Fix Platform Switcher in Top Right (Override compact-engine-btns hiding text) */
+html.is-mobile .platform-switch-container {
   display: flex !important;
   align-items: center !important;
+  margin: 0 !important;
 }
 
-.platform-pill-switch {
+html.is-mobile .platform-pill-switch {
   display: inline-flex !important;
   align-items: center !important;
   background: var(--v-surface-1) !important;
-  border: 0.5px solid var(--v-border) !important;
-  border-radius: 8px !important;
+  border: 1px solid var(--v-border) !important;
+  border-radius: 9px !important;
   padding: 2px !important;
   gap: 2px !important;
   box-shadow: none !important;
 }
 
-.platform-btn {
+html.is-mobile .platform-pill-indicator {
+  display: none !important;
+}
+
+html.is-mobile .platform-btn,
+html.is-mobile body.compact-engine-btns .platform-btn {
   height: 26px !important;
-  padding: 0 9px !important;
-  border-radius: 6px !important;
+  padding: 0 10px !important;
+  border-radius: 7px !important;
   font-size: 11.5px !important;
   font-weight: 600 !important;
   color: var(--v-text-2) !important;
@@ -166,277 +146,241 @@ input, textarea {
   border: none !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  justify-content: center !important;
+  gap: 0 !important;
   box-shadow: none !important;
-  transition: background 0.15s ease, color 0.15s ease !important;
 }
 
-.platform-btn svg {
-  width: 12px !important;
-  height: 12px !important;
-  display: none !important; /* Clean text-only segmented control on iPhone */
+html.is-mobile .platform-btn svg {
+  display: none !important;
 }
 
-.platform-btn.active {
+html.is-mobile .platform-btn span,
+html.is-mobile body.compact-engine-btns .platform-btn span {
+  display: inline-block !important;
+  max-width: none !important;
+  opacity: 1 !important;
+  margin: 0 !important;
+  color: inherit !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+}
+
+html.is-mobile .platform-btn.active {
   background: var(--v-surface-3) !important;
   color: var(--v-text-1) !important;
+}
+
+/* Search Bar (.top-nav) */
+html.is-mobile .top-nav {
+  position: static !important;
+  transform: none !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  height: auto !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 2px 16px 8px 16px !important;
+  background: var(--v-bg) !important;
+}
+
+html.is-mobile .search-box-wrapper,
+html.is-mobile .top-nav.search-pos-middle .search-box-wrapper {
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+html.is-mobile .search-box {
+  width: 100% !important;
+  height: 38px !important;
+  background: var(--v-surface-1) !important;
+  border: 1px solid var(--v-border) !important;
+  border-radius: 10px !important;
+  padding: 0 12px !important;
   box-shadow: none !important;
 }
 
-/* Search Bar Row (.top-nav) */
-.top-nav {
+/* ============================================================================
+   2. MAIN VIEWPORT AREA
+   ============================================================================ */
+html.is-mobile .app-layout {
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  position: fixed !important;
+  inset: calc(var(--safe-top) + 92px) 0 var(--chrome-bottom) 0 !important;
+}
+
+html.is-mobile .main-content {
+  border-radius: 0 !important;
+  padding: 10px 16px 28px 16px !important;
+  background: transparent !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================================
+   3. HOME SCREEN GREETING, FILTER PILLS & 2x2 QUICK GRID (#violet-home-top)
+   ============================================================================ */
+html.is-mobile .violet-home-top {
   display: flex !important;
   flex-direction: column !important;
-  padding: 4px 16px 8px 16px !important;
-  margin: 0 !important;
-  height: auto !important;
-  background: var(--v-bg) !important;
-  border-bottom: 0.5px solid var(--v-border) !important;
-  z-index: 25 !important;
+  gap: 12px !important;
+  margin-bottom: 20px !important;
 }
 
-.search-box-wrapper {
-  width: 100% !important;
-  max-width: 100% !important;
+html.is-mobile .violet-greeting-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+html.is-mobile .violet-greeting-text {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  color: var(--v-text-1) !important;
   margin: 0 !important;
 }
 
-.search-box {
-  width: 100% !important;
-  height: 36px !important;
-  background: var(--v-surface-1) !important;
-  border: 0.5px solid var(--v-border) !important;
-  border-radius: 10px !important;
-  padding: 0 10px !important;
+html.is-mobile .violet-greeting-actions {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  box-shadow: none !important;
 }
 
-.search-box:focus-within {
-  border-color: rgba(255, 255, 255, 0.18) !important;
-  background: var(--v-surface-2) !important;
-  box-shadow: none !important;
-}
-
-.search-icon-btn {
-  padding: 0 !important;
-  width: 20px !important;
-  height: 20px !important;
-  color: var(--v-text-3) !important;
-  background: none !important;
-  border: none !important;
-}
-
-.search-icon-btn svg {
-  width: 16px !important;
-  height: 16px !important;
-}
-
-#search-input {
-  font-size: 14px !important;
+html.is-mobile .violet-header-icon-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 9px !important;
+  background: var(--v-surface-1) !important;
+  border: 1px solid var(--v-border) !important;
   color: var(--v-text-1) !important;
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  height: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   padding: 0 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
 }
 
-#search-input::placeholder {
-  color: var(--v-text-3) !important;
+html.is-mobile .violet-header-icon-btn:active {
+  background: var(--v-surface-2) !important;
 }
 
-/* ============================================================================
-   2. MAIN SCROLL VIEWPORT
-   ============================================================================ */
-.app-layout {
+/* Filter Pills Row */
+html.is-mobile .violet-filter-pills {
   display: flex !important;
-  flex-direction: column !important;
-  height: calc(100vh - 88px - var(--safe-top)) !important;
-  height: calc(100dvh - 88px - var(--safe-top)) !important;
-  width: 100vw !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  align-items: center !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+}
+
+html.is-mobile .violet-filter-pills::-webkit-scrollbar {
+  display: none !important;
+}
+
+html.is-mobile .violet-pill {
+  height: 32px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  background: var(--v-surface-1) !important;
+  color: var(--v-text-2) !important;
+  border: 1px solid var(--v-border) !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+}
+
+html.is-mobile .violet-pill.active {
+  background: var(--v-text-1) !important;
+  color: var(--v-bg) !important;
+  border-color: var(--v-text-1) !important;
+}
+
+/* 2x2 Quick Grid Cards (Dark Surface, Crisp White Text) */
+html.is-mobile .violet-quick-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+html.is-mobile .violet-quick-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  height: 52px !important;
+  padding: 0 12px 0 8px !important;
+  border-radius: 10px !important;
+  background: var(--v-surface-1) !important;
+  border: 1px solid var(--v-border) !important;
+  color: var(--v-text-1) !important;
+  text-align: left !important;
   overflow: hidden !important;
-  position: relative !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
 }
 
-.main-content {
-  flex: 1 1 auto !important;
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
-  border-radius: 0 !important;
-  background: var(--v-bg) !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch !important;
-  padding: 12px 16px calc(var(--tabbar-h) + var(--miniplayer-h) + 28px) 16px !important;
-  box-sizing: border-box !important;
+html.is-mobile .violet-quick-card:active {
+  background: var(--v-surface-2) !important;
 }
 
-/* ============================================================================
-   3. VIOLET HOME TOP (Filter Pills + 2x2 Quick Grid)
-   ============================================================================ */
-.violet-home-top {
-  margin-bottom: 18px;
+html.is-mobile .violet-quick-art {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  background: var(--v-surface-2) !important;
+  color: var(--v-text-1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
 }
 
-.violet-home-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
+html.is-mobile .violet-quick-card[data-qaction="wave"] .violet-quick-art {
+  background: var(--v-accent-soft) !important;
+  color: var(--v-accent) !important;
 }
 
-.violet-filter-pills {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
+html.is-mobile .violet-quick-art svg {
+  width: 18px !important;
+  height: 18px !important;
 }
 
-.violet-filter-pills::-webkit-scrollbar {
-  display: none;
-}
-
-.violet-pill {
-  height: 30px;
-  padding: 0 13px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--v-text-2);
-  background: var(--v-surface-1);
-  border: 0.5px solid var(--v-border);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.violet-pill.active {
-  background: var(--v-text-1);
-  color: var(--v-bg);
-  border-color: var(--v-text-1);
-}
-
-.violet-top-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.violet-icon-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--v-surface-1);
-  border: 0.5px solid var(--v-border);
-  color: var(--v-text-2);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-.violet-icon-btn svg {
-  width: 15px;
-  height: 15px;
-}
-
-.violet-icon-btn:active {
-  background: var(--v-surface-2);
-  color: var(--v-text-1);
-}
-
-/* 2x2 Compact Quick Access Grid (Spotify / Apple Music iOS style) */
-.violet-quick-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.violet-quick-tile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 50px;
-  padding: 0 10px 0 6px;
-  background: var(--v-surface-1);
-  border: 0.5px solid var(--v-border);
-  border-radius: 8px;
-  color: var(--v-text-1);
-  text-align: left;
-  overflow: hidden;
-  transition: background 0.15s ease;
-}
-
-.violet-quick-tile:active {
-  background: var(--v-surface-2);
-}
-
-.violet-quick-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 6px;
-  background: var(--v-surface-2);
-  color: var(--v-text-1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.violet-quick-tile[data-quick="wave"] .violet-quick-icon {
-  background: var(--v-accent-soft);
-  color: var(--v-accent);
-}
-
-.violet-quick-icon svg {
-  width: 18px;
-  height: 18px;
-}
-
-.violet-quick-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  gap: 1px;
-}
-
-.violet-quick-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--v-text-1);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.violet-quick-sub {
-  font-size: 11px;
-  color: var(--v-text-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+html.is-mobile .violet-quick-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--v-text-1) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 /* ============================================================================
-   4. FLATTENED HORIZONTAL SHELVES (Overrides Desktop 66vh 3D Coverflow)
+   4. HOME SHELVES (Flattened Horizontal Scroll Instead of 3D Coverflow)
    ============================================================================ */
-.discover-content {
+html.is-mobile .discover-content {
   display: flex !important;
   flex-direction: column !important;
   gap: 22px !important;
   padding: 0 !important;
 }
 
-.home-hero {
+html.is-mobile .home-hero {
   height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
@@ -444,7 +388,7 @@ input, textarea {
   margin: 0 !important;
 }
 
-.home-hero-track {
+html.is-mobile .home-hero-track {
   display: flex !important;
   flex-direction: column !important;
   gap: 22px !important;
@@ -453,13 +397,16 @@ input, textarea {
   height: auto !important;
 }
 
-.home-hero-dots {
+html.is-mobile .home-hero-dots,
+html.is-mobile .my-wave-focused-meta,
+html.is-mobile #my-wave-focused-meta,
+html.is-mobile #jump-focused-meta {
   display: none !important;
 }
 
-.home-pane,
-#section-my-wave,
-#section-jump-back {
+html.is-mobile .home-pane,
+html.is-mobile #section-my-wave,
+html.is-mobile #section-jump-back {
   width: 100% !important;
   min-width: 100% !important;
   height: auto !important;
@@ -470,76 +417,59 @@ input, textarea {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
-  justify-content: flex-start !important;
   background: transparent !important;
 }
 
-.home-pane-header,
-.section-header {
+html.is-mobile .home-pane-header {
   position: static !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
+  gap: 8px !important;
   padding: 0 !important;
   margin: 0 0 10px 0 !important;
   width: 100% !important;
 }
 
-.home-pane-label,
-.my-wave-title,
-.section-title {
-  font-size: 17px !important;
+html.is-mobile .home-pane-header .my-wave-actions {
+  position: static !important;
+  transform: none !important;
+  flex: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+html.is-mobile .home-pane-label,
+html.is-mobile .section-title {
+  font-size: 18px !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em !important;
   color: var(--v-text-1) !important;
+  padding: 0 !important;
   margin: 0 !important;
 }
 
-.my-wave-actions {
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-}
-
-#btn-refresh-vibe {
-  width: 30px !important;
-  height: 30px !important;
-  border-radius: 8px !important;
-  background: var(--v-surface-1) !important;
-  border: 0.5px solid var(--v-border) !important;
-  color: var(--v-text-2) !important;
-}
-
-#btn-play-my-wave {
-  height: 30px !important;
-  padding: 0 12px !important;
+html.is-mobile #btn-play-my-wave {
+  height: 32px !important;
+  padding: 0 14px !important;
   border-radius: 999px !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
   background: var(--v-text-1) !important;
   color: var(--v-bg) !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
   border: none !important;
   box-shadow: none !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 5px !important;
 }
 
-#btn-play-my-wave svg {
-  width: 12px !important;
-  height: 12px !important;
-}
-
-/* Convert 3D coverflow into a clean horizontal album shelf */
-.my-wave-carousel-wrapper {
+html.is-mobile .my-wave-carousel-wrapper {
   height: auto !important;
   min-height: 0 !important;
   width: 100% !important;
   overflow: visible !important;
-  position: relative !important;
 }
 
-.my-wave-tracks-row {
+html.is-mobile .my-wave-tracks-row {
   display: flex !important;
   flex-direction: row !important;
   align-items: flex-start !important;
@@ -551,20 +481,18 @@ input, textarea {
   height: auto !important;
   perspective: none !important;
   scrollbar-width: none !important;
-  -webkit-overflow-scrolling: touch !important;
 }
 
-.my-wave-tracks-row::-webkit-scrollbar {
+html.is-mobile .my-wave-tracks-row::-webkit-scrollbar {
   display: none !important;
 }
 
-/* Override every card state (.focused, .near, .far) so all cards sit cleanly in a row */
-.my-wave-track-card,
-.my-wave-track-card.focused,
-.my-wave-track-card.near,
-.my-wave-track-card.far,
-.my-wave-track-card.prev,
-.my-wave-track-card.next {
+html.is-mobile .my-wave-track-card,
+html.is-mobile .my-wave-track-card.focused,
+html.is-mobile .my-wave-track-card.near,
+html.is-mobile .my-wave-track-card.far,
+html.is-mobile .my-wave-track-card.prev,
+html.is-mobile .my-wave-track-card.next {
   position: relative !important;
   left: auto !important;
   top: auto !important;
@@ -589,29 +517,27 @@ input, textarea {
   flex-shrink: 0 !important;
 }
 
-.my-wave-track-cover {
+html.is-mobile .my-wave-track-cover {
   width: 136px !important;
   height: 136px !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   overflow: hidden !important;
   background: var(--v-surface-1) !important;
-  border: 0.5px solid var(--v-border) !important;
+  border: 1px solid var(--v-border) !important;
   box-shadow: none !important;
-  position: relative !important;
 }
 
-.my-wave-track-cover img {
+html.is-mobile .my-wave-track-cover img {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
-  border-radius: 8px !important;
 }
 
-.my-wave-play-badge {
+html.is-mobile .my-wave-play-badge {
   display: none !important;
 }
 
-.my-wave-track-meta {
+html.is-mobile .my-wave-track-meta {
   display: flex !important;
   flex-direction: column !important;
   gap: 2px !important;
@@ -622,291 +548,16 @@ input, textarea {
   transform: none !important;
 }
 
-.my-wave-track-title {
+html.is-mobile .my-wave-track-title {
   font-size: 13px !important;
   font-weight: 600 !important;
   color: var(--v-text-1) !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  line-height: 1.25 !important;
 }
 
-.my-wave-track-artist {
-  font-size: 11.5px !important;
-  font-weight: 400 !important;
-  color: var(--v-text-2) !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  line-height: 1.2 !important;
-}
-
-/* Hide giant desktop focused title block underneath carousel */
-.my-wave-focused-meta,
-#my-wave-focused-meta,
-#jump-focused-meta {
-  display: none !important;
-}
-
-/* Horizontal Scroll Rows in #section-on-repeat & #section-for-you */
-.home-scroll-row,
-.horizontal-scroll-row,
-.cards-grid {
-  display: flex !important;
-  flex-direction: row !important;
-  gap: 12px !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
-  padding: 2px 0 6px 0 !important;
-  scrollbar-width: none !important;
-}
-
-.home-scroll-row::-webkit-scrollbar,
-.horizontal-scroll-row::-webkit-scrollbar,
-.cards-grid::-webkit-scrollbar {
-  display: none !important;
-}
-
-.track-card,
-.home-card {
-  width: 136px !important;
-  min-width: 136px !important;
-  max-width: 136px !important;
-  padding: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  flex-shrink: 0 !important;
-}
-
-.track-card-cover,
-.home-card-cover {
-  width: 136px !important;
-  height: 136px !important;
-  border-radius: 8px !important;
-  border: 0.5px solid var(--v-border) !important;
-  overflow: hidden !important;
-  margin-bottom: 6px !important;
-}
-
-/* ============================================================================
-   5. TRACK ROWS & LISTS (Clean iOS List Cells, No Glow)
-   ============================================================================ */
-.tracks-list {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
-}
-
-.track-row {
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  padding: 8px 6px !important;
-  min-height: 56px !important;
-  border-radius: 8px !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.track-row:active {
-  background: var(--v-surface-1) !important;
-}
-
-.track-row.playing {
-  background: var(--v-surface-1) !important;
-}
-
-.track-row.playing .track-row-title,
-.track-row.playing .track-title {
-  color: var(--v-accent) !important;
-}
-
-.track-index,
-.track-num {
-  display: none !important;
-}
-
-.track-thumb,
-.track-row-cover {
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 6px !important;
-  object-fit: cover !important;
-  flex-shrink: 0 !important;
-  border: 0.5px solid var(--v-border) !important;
-}
-
-.track-info,
-.track-row-info {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-}
-
-.track-row-title,
-.track-info .track-title {
-  font-size: 14.5px !important;
-  font-weight: 500 !important;
-  color: var(--v-text-1) !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-.track-row-artist,
-.track-info .track-artist {
-  font-size: 12.5px !important;
-  color: var(--v-text-2) !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-.track-duration {
-  font-size: 12px !important;
-  color: var(--v-text-3) !important;
-  margin-right: 2px !important;
-}
-
-/* ============================================================================
-   6. VIEW HEADERS & BUTTONS (Favorites, Files, History, Settings)
-   ============================================================================ */
-.view-header {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 8px !important;
-  padding: 4px 0 12px 0 !important;
-  margin-bottom: 8px !important;
-  border-bottom: 0.5px solid var(--v-border) !important;
-}
-
-.view-header h2 {
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.025em !important;
-  margin: 0 !important;
-  color: var(--v-text-1) !important;
-}
-
-.view-subtitle {
-  font-size: 12px !important;
-  color: var(--v-text-2) !important;
-  display: block !important;
-  margin-top: 2px !important;
-}
-
-.btn-pill-primary {
-  background: var(--v-text-1) !important;
-  color: var(--v-bg) !important;
-  border: none !important;
-  border-radius: 999px !important;
-  height: 32px !important;
-  padding: 0 14px !important;
-  font-size: 12.5px !important;
-  font-weight: 600 !important;
-  box-shadow: none !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-}
-
-.btn-outline-pill,
-.pill-select {
-  background: var(--v-surface-1) !important;
-  color: var(--v-text-1) !important;
-  border: 0.5px solid var(--v-border-strong) !important;
-  border-radius: 999px !important;
-  height: 32px !important;
-  padding: 0 12px !important;
-  font-size: 12.5px !important;
-  font-weight: 500 !important;
-  box-shadow: none !important;
-}
-
-.view-search-box {
-  height: 36px !important;
-  background: var(--v-surface-1) !important;
-  border: 0.5px solid var(--v-border) !important;
-  border-radius: 10px !important;
-  padding: 0 12px !important;
-  margin-bottom: 12px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-}
-
-/* ============================================================================
-   7. FLOATING MINI-PLAYER & FULL-SCREEN NOW PLAYING SHEET
-   ============================================================================ */
-.playbar:not(.mobile-expanded) {
-  position: fixed !important;
-  left: 10px !important;
-  right: 10px !important;
-  bottom: calc(var(--tabbar-h) + 6px) !important;
-  height: var(--miniplayer-h) !important;
-  padding: 0 10px !important;
-  border-radius: 12px !important;
-  background: rgba(20, 20, 24, 0.92) !important;
-  backdrop-filter: blur(28px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-  border: 0.5px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  z-index: 95 !important;
-}
-
-.playbar:not(.mobile-expanded) .playbar-left {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-}
-
-.playbar:not(.mobile-expanded) .artwork-wrapper {
-  width: 40px !important;
-  height: 40px !important;
-  border-radius: 7px !important;
-  overflow: hidden !important;
-  flex-shrink: 0 !important;
-  border: 0.5px solid var(--v-border) !important;
-}
-
-.playbar:not(.mobile-expanded) #m3c-canvas {
-  display: none !important;
-}
-
-.playbar:not(.mobile-expanded) .track-artwork {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  border-radius: 7px !important;
-}
-
-.playbar:not(.mobile-expanded) .track-meta {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 1px !important;
-}
-
-.playbar:not(.mobile-expanded) .track-title {
-  font-size: 13.5px !important;
-  font-weight: 600 !important;
-  color: var(--v-text-1) !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-.playbar:not(.mobile-expanded) .track-artist {
+html.is-mobile .my-wave-track-artist {
   font-size: 11.5px !important;
   color: var(--v-text-2) !important;
   white-space: nowrap !important;
@@ -914,343 +565,791 @@ input, textarea {
   text-overflow: ellipsis !important;
 }
 
-.playbar:not(.mobile-expanded) #btn-edit-current-track,
-.playbar:not(.mobile-expanded) #btn-playbar-more,
-.playbar:not(.mobile-expanded) #btn-shuffle,
-.playbar:not(.mobile-expanded) #btn-prev,
-.playbar:not(.mobile-expanded) #btn-repeat,
-.playbar:not(.mobile-expanded) .scrubber-bar-wrapper,
-.playbar:not(.mobile-expanded) .playbar-right {
-  display: none !important;
-}
-
-.playbar:not(.mobile-expanded) .playbar-center {
-  flex: 0 0 auto !important;
-  width: auto !important;
-  max-width: none !important;
-}
-
-.playbar:not(.mobile-expanded) .playback-controls {
-  display: flex !important;
-  align-items: center !important;
-  gap: 2px !important;
-}
-
-.playbar:not(.mobile-expanded) .btn-play-pause {
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 50% !important;
-  background: transparent !important;
-  color: var(--v-text-1) !important;
-  box-shadow: none !important;
-}
-
-.playbar:not(.mobile-expanded) #btn-next {
-  width: 34px !important;
-  height: 34px !important;
-  color: var(--v-text-1) !important;
-}
-
-/* Full-Screen Expanded Now Playing Sheet */
-.playbar.mobile-expanded {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  height: 100dvh !important;
-  border-radius: 0 !important;
-  background: #09090B !important;
-  z-index: 250 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: space-between !important;
-  padding: calc(var(--safe-top) + 44px) 24px calc(var(--safe-bottom) + 24px) 24px !important;
-  box-sizing: border-box !important;
-  box-shadow: none !important;
-}
-
-.playbar.mobile-expanded::before {
-  content: "";
-  position: absolute;
-  top: calc(var(--safe-top) + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 36px;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.mobile-np-close-btn {
-  display: none;
-}
-
-.playbar.mobile-expanded .mobile-np-close-btn {
-  display: flex !important;
-  position: absolute !important;
-  top: calc(var(--safe-top) + 12px) !important;
-  left: 20px !important;
-  width: 34px !important;
-  height: 34px !important;
-  border-radius: 50% !important;
-  background: var(--v-surface-1) !important;
-  border: 0.5px solid var(--v-border) !important;
-  color: var(--v-text-1) !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10 !important;
-}
-
-.playbar.mobile-expanded .playbar-left {
-  flex-direction: column !important;
-  align-items: center !important;
-  width: 100% !important;
-  gap: 20px !important;
-  margin-top: 12px !important;
-}
-
-.playbar.mobile-expanded .artwork-wrapper {
-  width: min(78vw, 310px) !important;
-  height: min(78vw, 310px) !important;
-  border-radius: 14px !important;
-  overflow: hidden !important;
-  border: 0.5px solid var(--v-border-strong) !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55) !important;
-}
-
-.playbar.mobile-expanded #m3c-canvas {
-  display: none !important;
-}
-
-.playbar.mobile-expanded .track-artwork {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  border-radius: 14px !important;
-}
-
-.playbar.mobile-expanded .track-meta {
-  width: 100% !important;
-  text-align: left !important;
-  align-items: flex-start !important;
-}
-
-.playbar.mobile-expanded .track-title {
-  font-size: 20px !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
-  color: var(--v-text-1) !important;
-}
-
-.playbar.mobile-expanded .track-artist {
-  font-size: 15px !important;
-  color: var(--v-text-2) !important;
-  margin-top: 2px !important;
-}
-
-.playbar.mobile-expanded .playbar-center {
-  width: 100% !important;
-  max-width: 100% !important;
-  display: flex !important;
-  flex-direction: column-reverse !important;
-  gap: 20px !important;
-}
-
-.playbar.mobile-expanded .scrubber-bar-wrapper {
-  width: 100% !important;
-}
-
-.playbar.mobile-expanded .playback-controls {
-  width: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-}
-
-.playbar.mobile-expanded .btn-play-pause {
-  width: 64px !important;
-  height: 64px !important;
-  border-radius: 50% !important;
-  background: var(--v-text-1) !important;
-  color: var(--v-bg) !important;
-  box-shadow: none !important;
-}
-
-.playbar.mobile-expanded .playbar-right {
-  width: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-around !important;
-  padding-top: 8px !important;
-  border-top: 0.5px solid var(--v-border) !important;
+html.is-mobile .onrepeat-head .section-title {
+  flex-basis: 100%;
 }
 
 /* ============================================================================
-   8. 5-TAB NATIVE iOS BOTTOM BAR (.sidebar)
+   5. 5-TAB BOTTOM BAR (.sidebar) & PLAYLISTS SHEET (#rail-drawer)
    ============================================================================ */
-.sidebar {
+html.is-mobile .sidebar {
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
   top: auto !important;
-  width: 100vw !important;
-  height: var(--tabbar-h) !important;
-  padding: 4px 8px calc(var(--safe-bottom) + 2px) 8px !important;
-  background: rgba(12, 12, 15, 0.94) !important;
-  backdrop-filter: blur(28px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-  border-top: 0.5px solid var(--v-border) !important;
-  z-index: 100 !important;
-  display: flex !important;
+  width: auto !important;
+  height: calc(var(--tabbar-h) + var(--safe-bottom)) !important;
+  padding: 2px 6px var(--safe-bottom) 6px !important;
+  border-radius: 0 !important;
   flex-direction: row !important;
-  align-items: center !important;
   justify-content: space-around !important;
-  box-sizing: border-box !important;
+  align-items: center !important;
+  gap: 0 !important;
+  z-index: 3200 !important;
+  background: #0C0C0F !important;
+  border-top: 1px solid var(--v-border) !important;
 }
 
-.sidebar-nav {
-  display: flex !important;
+html.is-mobile .sidebar-nav {
   flex-direction: row !important;
-  align-items: center !important;
   justify-content: space-around !important;
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  width: auto !important;
+  flex: 4 1 auto !important;
+  gap: 0 !important;
 }
 
-/* Hide History from bottom bar (available in top header button) */
-#nav-history {
+html.is-mobile .rail-action-group {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  flex: 1 1 auto !important;
+  gap: 0 !important;
+}
+
+html.is-mobile .nav-active-indicator,
+html.is-mobile .rail-divider,
+html.is-mobile #nav-history,
+html.is-mobile #btn-toggle-presets-drawer,
+html.is-mobile .nav-badge {
   display: none !important;
 }
 
-.sidebar-nav .nav-item {
+html.is-mobile .nav-item,
+html.is-mobile .rail-icon-btn {
   flex: 1 1 0 !important;
-  height: 46px !important;
+  width: auto !important;
+  height: 48px !important;
+  border-radius: 10px !important;
   background: transparent !important;
-  border: none !important;
-  border-radius: 8px !important;
+  color: var(--v-text-3) !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 3px !important;
-  color: var(--v-text-3) !important;
   padding: 0 !important;
+  border: none !important;
   box-shadow: none !important;
 }
 
-.sidebar-nav .nav-item .nav-indicator {
+html.is-mobile .nav-item .nav-indicator,
+html.is-mobile .rail-icon-btn .nav-indicator {
   width: auto !important;
   height: auto !important;
   padding: 0 !important;
   background: transparent !important;
-  box-shadow: none !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  position: relative !important;
 }
 
-.sidebar-nav .nav-item svg {
-  width: 21px !important;
-  height: 21px !important;
-  stroke-width: 1.75 !important;
+html.is-mobile .nav-item svg,
+html.is-mobile .rail-icon-btn svg {
+  width: 20px !important;
+  height: 20px !important;
 }
 
-.sidebar-nav .nav-item .mobile-tab-label {
+html.is-mobile .violet-nav-label {
   font-size: 10px !important;
   font-weight: 500 !important;
-  letter-spacing: -0.01em !important;
   line-height: 1 !important;
+  color: inherit !important;
 }
 
-.sidebar-nav .nav-item.active {
+html.is-mobile .nav-item.active,
+html.is-mobile .rail-icon-btn.active {
+  background: transparent !important;
   color: var(--v-text-1) !important;
 }
 
-.sidebar-nav .nav-item.active .mobile-tab-label {
+html.is-mobile .nav-item.active .violet-nav-label {
   font-weight: 600 !important;
 }
 
-.nav-badge {
+/* Playlists Bottom Sheet (#rail-drawer) */
+html.is-mobile #rail-drawer:not(.hidden) {
+  display: flex !important;
+  flex-direction: column !important;
+  position: fixed !important;
+  left: 8px !important;
+  right: 8px !important;
+  top: auto !important;
+  bottom: calc(var(--tabbar-h) + var(--mini-h) + var(--safe-bottom) + 14px) !important;
+  width: calc(100vw - 16px) !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 40vh !important;
+  max-height: 62vh !important;
+  overflow-y: auto !important;
+  padding: 16px !important;
+  border-radius: 18px !important;
+  background: var(--v-surface-1) !important;
+  border: 1px solid var(--v-border-strong) !important;
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.65) !important;
+  transform: none !important;
+  z-index: 3300 !important;
+}
+
+html.is-mobile #rail-drawer .playlists-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+html.is-mobile #rail-drawer .playlists-list:empty::after {
+  content: 'No playlists yet. Tap + to create one.';
+  display: block;
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--v-text-2);
+  font-size: 14px;
+}
+
+/* ============================================================================
+   6. FLOATING MINI-PLAYER (.playbar) & FULL-SCREEN NOW PLAYING (#right-panel)
+   ============================================================================ */
+html.is-mobile .playbar {
+  position: fixed !important;
+  left: 8px !important;
+  right: 8px !important;
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 6px) !important;
+  top: auto !important;
+  height: var(--mini-h) !important;
+  padding: 0 10px !important;
+  border-radius: 14px !important;
+  background: #141418 !important;
+  border: 1px solid var(--v-border-strong) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  z-index: 3100 !important;
+  width: auto !important;
+  transition: none !important;
+}
+
+html.is-mobile .playbar-left {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  gap: 10px !important;
+  width: auto !important;
+}
+
+html.is-mobile #playbar-artwork-wrapper,
+html.is-mobile #m3c-wrap {
+  width: 42px !important;
+  height: 42px !important;
+  margin-top: 0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+}
+
+html.is-mobile #m3c-canvas {
+  display: none !important;
+}
+
+html.is-mobile .playbar-left .track-meta {
+  max-width: none !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+html.is-mobile .playbar-left > .btn-icon-pill,
+html.is-mobile .playbar-right,
+html.is-mobile #btn-shuffle,
+html.is-mobile #btn-repeat,
+html.is-mobile #btn-prev,
+html.is-mobile .playbar-center .scrubber-bar-wrapper {
+  display: none !important;
+}
+
+/* Mini-player Like button (Fix white square button bug) */
+html.is-mobile #mini-like,
+html.is-mobile .mini-like-btn {
+  width: 38px !important;
+  height: 38px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 50% !important;
+  color: var(--v-text-2) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
+  box-shadow: none !important;
+}
+
+html.is-mobile #mini-like.on,
+html.is-mobile .mini-like-btn.on {
+  color: var(--v-accent) !important;
+}
+
+html.is-mobile .playbar-center {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: none !important;
+}
+
+html.is-mobile .playback-controls {
+  gap: 2px !important;
+}
+
+html.is-mobile .btn-play-pause {
+  width: 40px !important;
+  height: 40px !important;
+  background: transparent !important;
+  color: var(--v-text-1) !important;
+  box-shadow: none !important;
+}
+
+/* Thin progress line along bottom of mini-player */
+html.is-mobile .playbar::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--v-accent) calc(var(--mini-progress, 0) * 100%), rgba(255, 255, 255, 0.1) 0);
+}
+
+/* ---------- Full-Screen Now Playing Sheet (#right-panel + body.np-open) ---------- */
+html.is-mobile #right-panel {
+  position: fixed !important;
+  inset: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  min-width: 100vw !important;
+  --right-panel-width: 100vw !important;
+  border-radius: 0 !important;
+  padding: calc(var(--safe-top) + 12px) 20px calc(var(--safe-bottom) + 230px) 20px !important;
+  z-index: 3400 !important;
+  background: var(--v-bg) !important;
+  border: none !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+html.is-mobile #right-panel.hidden {
+  transform: translateY(100%) !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+}
+
+html.is-mobile #right-panel::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--safe-top) + 6px);
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  margin-left: -18px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+html.is-mobile .right-panel-header {
+  flex-shrink: 0 !important;
+  min-height: max-content !important;
+  margin-bottom: 0 !important;
+}
+
+html.is-mobile .cover-container,
+html.is-mobile .right-panel-cover,
+html.is-mobile .right-panel-cover-fallback {
+  width: min(74vw, 300px) !important;
+  height: min(74vw, 300px) !important;
+  border-radius: 14px !important;
+}
+
+/* Compact header when lyrics are visible */
+html.is-mobile #right-panel:not(.lyrics-empty) .right-panel-artwork-box {
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  text-align: left !important;
+  flex: 0 0 auto !important;
+}
+
+html.is-mobile #right-panel:not(.lyrics-empty) .cover-container,
+html.is-mobile #right-panel:not(.lyrics-empty) .right-panel-cover,
+html.is-mobile #right-panel:not(.lyrics-empty) .right-panel-cover-fallback {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 8px !important;
+  flex: 0 0 auto !important;
+}
+
+html.is-mobile #right-panel:not(.lyrics-empty) #btn-right-panel-art {
+  display: none !important;
+}
+
+html.is-mobile #right-panel:not(.lyrics-empty) .right-panel-meta {
+  align-items: flex-start !important;
+  text-align: left !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+html.is-mobile #right-panel:not(.lyrics-empty) .right-panel-title {
+  font-size: 17px !important;
+  text-align: left !important;
+}
+
+html.is-mobile #right-panel:not(.lyrics-empty) .right-panel-title-row {
+  width: 100% !important;
+}
+
+html.is-mobile #right-panel:not(.lyrics-empty) .lyrics-section,
+html.is-mobile #right-panel:not(.lyrics-empty) .lyrics-container {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+html.is-mobile #right-panel .lyrics-container {
+  -webkit-mask-image: linear-gradient(transparent, #000 8%, #000 86%, transparent);
+  mask-image: linear-gradient(transparent, #000 8%, #000 86%, transparent);
+}
+
+html.is-mobile .right-panel-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+
+html.is-mobile .np-tools-moved {
+  display: flex !important;
+  gap: 6px !important;
+  padding: 0 !important;
+  margin-right: auto !important;
+  background: transparent !important;
+}
+
+html.is-mobile .np-tools-moved .lyrics-action-btn {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+html.is-mobile #right-panel .lyrics-header:empty,
+html.is-mobile #right-panel .lyrics-header:not(:has(*)) {
+  display: none !important;
+}
+
+/* Like button in Now Playing */
+html.is-mobile #np-like {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--v-text-2);
+}
+
+html.is-mobile #np-like svg {
+  width: 22px;
+  height: 22px;
+}
+
+html.is-mobile #np-like.on {
+  color: var(--v-accent) !important;
+}
+
+/* Apple Music style clean lyrics */
+html.is-mobile #right-panel .lyric-line {
+  font-size: calc(24px * var(--font-scale, 1)) !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.015em;
+  text-align: left !important;
+  padding: 8px 4px !important;
+  color: var(--v-text-1) !important;
+  filter: none !important;
+  opacity: 0.32 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+html.is-mobile #right-panel .lyric-line.active {
+  opacity: 1 !important;
+  background: transparent !important;
+}
+
+/* Docked Full Transport Controls when Now Playing Sheet is Open (body.np-open) */
+html.is-mobile body.np-open .app-layout {
+  z-index: 3400 !important;
+}
+
+html.is-mobile body.np-open .titlebar,
+html.is-mobile body.np-open .top-nav,
+html.is-mobile body.np-open .main-content,
+html.is-mobile body.np-open .sidebar {
+  visibility: hidden !important;
+}
+
+html.is-mobile body.np-open .playbar {
+  z-index: 3500 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  padding: 10px 24px calc(var(--safe-bottom) + 16px) 24px !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  background: linear-gradient(transparent, #09090B 24%) !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+html.is-mobile body.np-open .playbar::after,
+html.is-mobile body.np-open .playbar-left,
+html.is-mobile body.np-open #mini-like {
+  display: none !important;
+}
+
+html.is-mobile body.np-open .playbar-center {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column-reverse !important;
+  gap: 12px !important;
+}
+
+html.is-mobile body.np-open .playbar-center .scrubber-bar-wrapper {
+  display: flex !important;
+  width: 100% !important;
+}
+
+html.is-mobile body.np-open #btn-shuffle,
+html.is-mobile body.np-open #btn-repeat,
+html.is-mobile body.np-open #btn-prev {
+  display: inline-flex !important;
+}
+
+html.is-mobile body.np-open .playback-controls {
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+html.is-mobile body.np-open .btn-play-pause {
+  width: 62px !important;
+  height: 62px !important;
+  border-radius: 50% !important;
+  background: var(--v-text-1) !important;
+  color: var(--v-bg) !important;
+}
+
+html.is-mobile body.np-open .playbar-right {
+  display: flex !important;
+  justify-content: space-around !important;
+  width: 100% !important;
+  margin-top: 4px !important;
+}
+
+html.is-mobile body.np-open .volume-control-group,
+html.is-mobile body.np-open .visualizer-container,
+html.is-mobile body.np-open #btn-toggle-lyrics-panel {
   display: none !important;
 }
 
 /* ============================================================================
-   9. DRAWERS, PANELS & MODALS (Bottom Sheets Fitted for iPhone)
+   7. ARTIST PAGE ("About the Artist" — Compact Centered Header & Clamped Bio)
    ============================================================================ */
-.rail-drawer:not(.hidden) {
-  position: fixed !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: var(--tabbar-h) !important;
-  top: auto !important;
-  width: 100vw !important;
-  max-height: 74vh !important;
+html.is-mobile .artist-hero-card {
+  padding: 20px 16px 16px 16px !important;
+  margin-bottom: 16px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  position: relative !important;
   background: var(--v-surface-1) !important;
-  border-top: 0.5px solid var(--v-border-strong) !important;
-  border-radius: 16px 16px 0 0 !important;
-  padding: 16px !important;
-  z-index: 180 !important;
-  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.6) !important;
-  box-sizing: border-box !important;
-}
-
-.right-panel,
-#lyrics-panel,
-#queue-panel {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100dvh !important;
-  background: var(--v-bg) !important;
-  z-index: 260 !important;
-  padding: calc(var(--safe-top) + 12px) 16px calc(var(--safe-bottom) + 16px) 16px !important;
-  box-sizing: border-box !important;
-}
-
-.modal-backdrop .dialog-card,
-.modal-backdrop .modal-card,
-.modal-backdrop .settings-card {
-  width: calc(100vw - 24px) !important;
-  max-width: 420px !important;
-  max-height: 82dvh !important;
-  background: var(--v-surface-1) !important;
-  border: 0.5px solid var(--v-border-strong) !important;
+  border: 1px solid var(--v-border) !important;
   border-radius: 16px !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65) !important;
+  overflow: hidden !important;
 }
 
-/* Settings View Mobile Fit */
-.settings-layout {
+html.is-mobile #artist-hero-backdrop {
+  opacity: 0.18 !important;
+  filter: blur(40px) !important;
+}
+
+html.is-mobile #btn-back-artist {
+  position: absolute !important;
+  top: 12px !important;
+  left: 12px !important;
+  z-index: 2 !important;
+}
+
+html.is-mobile .artist-card-body {
   display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+}
+
+html.is-mobile .artist-avatar-wrap,
+html.is-mobile .artist-avatar-img,
+html.is-mobile .artist-avatar-fallback {
+  width: 112px !important;
+  height: 112px !important;
+  border-radius: 50% !important;
+  margin: 0 auto !important;
+  flex: 0 0 auto !important;
+}
+
+html.is-mobile .artist-meta-box {
+  width: 100% !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+
+html.is-mobile .artist-title,
+html.is-mobile #artist-profile-name {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+  text-align: center !important;
+  color: var(--v-text-1) !important;
+  overflow-wrap: anywhere !important;
+}
+
+html.is-mobile .artist-bio-snippet {
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 3 !important;
+  line-clamp: 3 !important;
+  overflow: hidden !important;
+  text-align: center !important;
+  font-size: 13.5px !important;
+  line-height: 1.45 !important;
+  color: var(--v-text-2) !important;
+  cursor: pointer !important;
+  max-height: none !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+}
+
+html.is-mobile .artist-bio-snippet.expanded {
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+}
+
+html.is-mobile .artist-actions-bar {
+  width: 100% !important;
+  justify-content: center !important;
+  margin-top: 6px !important;
+}
+
+html.is-mobile #btn-play-artist-tracks {
+  width: 100% !important;
+  max-width: 200px !important;
+  height: 42px !important;
+  border-radius: 999px !important;
+  background: var(--v-text-1) !important;
+  color: var(--v-bg) !important;
+  justify-content: center !important;
+  box-shadow: none !important;
+}
+
+/* ============================================================================
+   8. PLAYLIST HEADER, TRACK ROWS, SETTINGS & MODALS
+   ============================================================================ */
+html.is-mobile .playlist-detail-header {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  padding: 18px 16px 16px !important;
+}
+
+html.is-mobile .playlist-detail-header #playlist-detail-cover,
+html.is-mobile .playlist-detail-header .playlist-cover-wrapper,
+html.is-mobile .playlist-detail-header .playlist-cover-art,
+html.is-mobile .playlist-detail-header .cover-single-img,
+html.is-mobile .playlist-detail-header img {
+  width: 132px !important;
+  height: 132px !important;
+  min-width: 132px !important;
+  min-height: 132px !important;
+  max-width: 132px !important;
+  max-height: 132px !important;
+  border-radius: 12px !important;
+}
+
+html.is-mobile .playlist-meta {
+  width: 100% !important;
+  gap: 6px !important;
+}
+
+html.is-mobile #playlist-detail-title {
+  font-size: 22px !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+html.is-mobile .playlist-actions {
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-top: 6px !important;
+  width: 100%;
+}
+
+/* Track Rows */
+html.is-mobile .track-row {
+  padding: 8px 6px !important;
+  gap: 12px !important;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html.is-mobile .track-row-index,
+html.is-mobile .track-row .btn-row-art,
+html.is-mobile .track-row .track-row-duration,
+html.is-mobile .track-row .btn-row-remove-playlist {
+  display: none !important;
+}
+
+html.is-mobile .track-row .track-row-actions {
+  opacity: 1 !important;
+}
+
+html.is-mobile .track-row .btn-icon-pill {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+html.is-mobile .track-row .track-row-artist {
+  pointer-events: none;
+  cursor: default;
+  text-decoration: none;
+}
+
+html.is-mobile .track-row:nth-child(n+25) {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
+
+/* Settings & Modals */
+html.is-mobile .settings-layout {
   flex-direction: column !important;
   gap: 12px !important;
 }
 
-.settings-sidebar,
-.settings-nav {
-  display: flex !important;
+html.is-mobile .settings-nav {
+  position: static !important;
+  flex: 0 0 auto !important;
   flex-direction: row !important;
   overflow-x: auto !important;
+  max-height: none !important;
+  width: 100% !important;
   gap: 6px !important;
-  padding-bottom: 4px !important;
-  scrollbar-width: none !important;
 }
 
-.settings-nav-item {
+html.is-mobile .settings-nav-btn {
+  flex: 0 0 auto !important;
   white-space: nowrap !important;
-  height: 32px !important;
-  padding: 0 12px !important;
-  border-radius: 999px !important;
-  font-size: 12.5px !important;
-  background: var(--v-surface-1) !important;
-  border: 0.5px solid var(--v-border) !important;
 }
 
-.settings-nav-item.active {
-  background: var(--v-text-1) !important;
-  color: var(--v-bg) !important;
+html.is-mobile #view-settings {
+  padding: 0 !important;
+}
+
+html.is-mobile .settings-content,
+html.is-mobile .settings-section,
+html.is-mobile .m3-group {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+html.is-mobile .setting-item {
+  padding: 14px !important;
+}
+
+html.is-mobile .setting-item-top {
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+html.is-mobile .setting-item-top > div:first-child,
+html.is-mobile .setting-item-top > .setting-name:first-child {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+html.is-mobile .setting-item-top > .effect-switch-btn,
+html.is-mobile .setting-item-top > button,
+html.is-mobile .setting-item-top > .theme-mode-toggle {
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+}
+
+html.is-mobile .setting-hints > span:not(:first-child):not(:last-child),
+html.is-mobile .slider-tick-labels > span:not(:first-child):not(:last-child),
+html.is-mobile .slider-ticks i.major:not(:first-child):not(:last-child) > span {
+  display: none !important;
+}
+
+html.is-mobile .setting-hints {
+  position: static !important;
+}
+
+html.is-mobile .modal-backdrop {
+  background: rgba(0, 0, 0, 0.75) !important;
+  z-index: 5000 !important;
+  padding: calc(var(--safe-top) + 12px) 12px calc(var(--safe-bottom) + 12px) !important;
+}
+
+html.is-mobile .settings-card,
+html.is-mobile .modal-backdrop > * {
+  background: var(--v-surface-1) !important;
+  border: 1px solid var(--v-border-strong) !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: calc(100vh - var(--safe-top) - var(--safe-bottom) - 24px) !important;
+  overflow-y: auto !important;
+}
+
+html.is-mobile .toast-container {
+  top: auto !important;
+  bottom: calc(var(--tabbar-h) + var(--mini-h) + var(--safe-bottom) + 18px) !important;
+  left: 12px !important;
+  right: 12px !important;
+  transform: none !important;
+  align-items: center !important;
+  z-index: 6000 !important;
+}
+
+html.is-mobile .muriel-toast,
+html.is-mobile .track-context-menu {
+  background: var(--v-surface-2) !important;
+  border: 1px solid var(--v-border-strong) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+}
+
+html.is-mobile .audio-tab[data-audio-tab="enhance"],
+html.is-mobile .audio-tab[data-audio-tab="effects"],
+html.is-mobile .audio-tab[data-audio-tab="eq"],
+html.is-mobile .audio-panel[data-audio-panel="enhance"],
+html.is-mobile .audio-panel[data-audio-panel="effects"],
+html.is-mobile .audio-panel[data-audio-panel="eq"],
+html.is-mobile #sp-modes button[data-mode="login"],
+html.is-mobile .sp-pane[data-mode="login"] {
+  display: none !important;
 }
