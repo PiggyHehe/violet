@@ -401,6 +401,172 @@
   const bio = document.getElementById('artist-profile-bio');
   if (bio) bio.addEventListener('click', () => bio.classList.toggle('expanded'));
 
+  // ---------- 6. Dedicated Search Results Page Behaviour ----------
+  const searchResults = document.getElementById('search-results-container');
+  const mainContent = document.getElementById('main-content');
+  if (searchResults) {
+    if (!document.getElementById('violet-search-header')) {
+      const searchHead = document.createElement('div');
+      searchHead.id = 'violet-search-header';
+      searchHead.className = 'violet-search-header';
+      searchHead.innerHTML = `
+        <button type="button" class="violet-search-back-btn" id="violet-search-back-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          <span>Back to Home</span>
+        </button>
+        <span class="violet-search-page-label">Search Results</span>
+      `;
+      searchResults.prepend(searchHead);
+      searchHead.querySelector('#violet-search-back-btn')?.addEventListener('click', () => {
+        const clearBtn = document.getElementById('search-clear-btn');
+        const searchInput = document.getElementById('search-input');
+        if (clearBtn && !clearBtn.classList.contains('hidden')) {
+          clearBtn.click();
+        } else {
+          if (searchInput) searchInput.value = '';
+          searchResults.classList.add('hidden');
+          document.getElementById('discover-empty')?.classList.remove('hidden');
+        }
+        if (mainContent) mainContent.scrollTop = 0;
+      });
+    }
+    new MutationObserver(() => {
+      if (!searchResults.classList.contains('hidden') && mainContent) {
+        mainContent.scrollTop = 0;
+      }
+    }).observe(searchResults, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  // ---------- 7. Custom CSS Import, Export & Live Editor ----------
+  const applyVioletCustomCss = (cssText) => {
+    document.querySelectorAll('style[data-muriel-custom="user"]').forEach((n) => n.remove());
+    if (cssText && cssText.trim()) {
+      const s = document.createElement('style');
+      s.dataset.murielCustom = 'user';
+      s.textContent = cssText;
+      document.head.appendChild(s);
+    }
+  };
+
+  // Ensure any saved custom CSS is applied at startup
+  applyVioletCustomCss(localStorage.getItem('muriel_custom_css') || '');
+
+  const DEFAULT_CSS_TEMPLATE = `/* Violet Custom CSS Template */
+:root {
+  --v-bg: #09090B;
+  --v-surface-1: #141418;
+  --v-surface-2: #1C1C22;
+  --v-text-1: #FAFAFA;
+  --v-text-2: #A1A1AA;
+  --v-accent: #8B5CF6;
+}
+`;
+
+  const themeSection = document.querySelector('.settings-section[data-cat="theme"]');
+  const interfaceGroup = document.querySelector('.settings-section[data-cat="interface"] .m3-group');
+  if (themeSection && !document.getElementById('violet-custom-css-card')) {
+    const cssCard = document.createElement('div');
+    cssCard.id = 'violet-custom-css-card';
+    cssCard.className = 'm3-group violet-custom-css-group';
+    cssCard.style.marginTop = '16px';
+    cssCard.innerHTML = `
+      <div class="setting-item" style="display: flex; flex-direction: column; align-items: stretch; gap: 12px;">
+        <div class="setting-item-top" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span class="setting-name">Custom CSS</span>
+            <span style="font-size: 12px; color: var(--v-text-2);">Import a .css file, edit live styles, or export your custom stylesheet.</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="btn-outline-pill" id="btn-violet-import-css">Import CSS</button>
+            <button type="button" class="btn-pill-primary" id="btn-violet-export-css">Export CSS</button>
+            <button type="button" class="btn-outline-pill" id="btn-violet-reset-css">Reset</button>
+          </div>
+        </div>
+        <input type="file" id="violet-css-file-input" accept=".css,text/css,text/plain" style="display: none;">
+        <textarea id="violet-custom-css-textarea" class="violet-css-textarea" rows="6" spellcheck="false" placeholder="/* Paste or write custom CSS here... */"></textarea>
+      </div>
+    `;
+    themeSection.prepend(cssCard);
+
+    const textarea = cssCard.querySelector('#violet-custom-css-textarea');
+    const fileInput = cssCard.querySelector('#violet-css-file-input');
+    textarea.value = localStorage.getItem('muriel_custom_css') || '';
+
+    let debounceTimer = 0;
+    textarea.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const val = textarea.value;
+        if (val.trim()) localStorage.setItem('muriel_custom_css', val);
+        else localStorage.removeItem('muriel_custom_css');
+        applyVioletCustomCss(val);
+      }, 250);
+    });
+
+    cssCard.querySelector('#btn-violet-import-css')?.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        textarea.value = text;
+        localStorage.setItem('muriel_custom_css', text);
+        applyVioletCustomCss(text);
+        if (window.MurielCore?.toast) window.MurielCore.toast(`Imported ${file.name}`, 'info');
+      } catch (err) {
+        if (window.MurielCore?.toast) window.MurielCore.toast('Could not read CSS file', 'error');
+      }
+      fileInput.value = '';
+    });
+
+    cssCard.querySelector('#btn-violet-export-css')?.addEventListener('click', async () => {
+      const cssToExport = (textarea.value && textarea.value.trim()) ? textarea.value : DEFAULT_CSS_TEMPLATE;
+      try {
+        const blob = new Blob([cssToExport], { type: 'text/css;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'violet-custom.css';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      } catch (e) {}
+      if (window.electronAPI?.shareText) {
+        await window.electronAPI.shareText('violet-custom.css', cssToExport);
+      } else if (window.MurielCore?.toast) {
+        window.MurielCore.toast('Exported violet-custom.css', 'info');
+      }
+    });
+
+    cssCard.querySelector('#btn-violet-reset-css')?.addEventListener('click', () => {
+      textarea.value = '';
+      localStorage.removeItem('muriel_custom_css');
+      applyVioletCustomCss('');
+      if (window.MurielCore?.toast) window.MurielCore.toast('Custom CSS reset', 'info');
+    });
+
+    // Also add a quick shortcut row in the Interface tab (first tab shown in Settings)
+    if (interfaceGroup) {
+      const quickCssRow = document.createElement('div');
+      quickCssRow.className = 'setting-item';
+      quickCssRow.innerHTML = `
+        <div class="setting-item-top" style="align-items: center; justify-content: space-between;">
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span class="setting-name">Custom CSS</span>
+            <span style="font-size: 12px; color: var(--v-text-2);">Import, export, or edit custom CSS rules</span>
+          </div>
+          <button type="button" class="btn-outline-pill" id="btn-jump-custom-css">Open CSS Editor</button>
+        </div>
+      `;
+      interfaceGroup.prepend(quickCssRow);
+      quickCssRow.querySelector('#btn-jump-custom-css')?.addEventListener('click', () => {
+        document.querySelector('.settings-nav-btn[data-cat="theme"]')?.click();
+        setTimeout(() => textarea.focus(), 80);
+      });
+    }
+  }
+
   ['btn-hw-accel', 'btn-tray-on-close', 'btn-media-keys'].forEach((id) => {
     const row = document.getElementById(id) && document.getElementById(id).closest('.setting-item');
     if (row) row.style.display = 'none';

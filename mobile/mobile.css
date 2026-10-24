@@ -62,13 +62,23 @@ html.is-mobile body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Strip decorative background blobs, meshes, and neon glows */
+/* Strip decorative background blobs, meshes, cover gradients, and neon glows */
 html.is-mobile .m3-organic-bg,
 html.is-mobile .bg-mesh-layer,
 html.is-mobile #bg-mesh-a,
 html.is-mobile #bg-mesh-b,
+html.is-mobile #cover-bg,
+html.is-mobile body.cover-bg-on #cover-bg,
+html.is-mobile .cover-bg-layer,
+html.is-mobile #custom-bg,
 html.is-mobile #fx-root,
 html.is-mobile #home-ambient,
+html.is-mobile .home-ambient,
+html.is-mobile .home-ambient-layer,
+html.is-mobile .hero-fx,
+html.is-mobile #album-hero-fx,
+html.is-mobile #playlist-hero-fx,
+html.is-mobile #artist-hero-backdrop,
 html.is-mobile .my-wave-ambient-light,
 html.is-mobile .np-ambient,
 html.is-mobile .logo-star,
@@ -79,6 +89,8 @@ html.is-mobile #visualizer-container,
 html.is-mobile #mini-visualizer,
 html.is-mobile .setting-item:has(#toggle-m3-cover) {
   display: none !important;
+  opacity: 0 !important;
+  background: none !important;
 }
 
 html.is-mobile *,
@@ -371,13 +383,64 @@ html.is-mobile .violet-quick-title {
 }
 
 /* ============================================================================
-   4. HOME SHELVES (Flattened Horizontal Scroll Instead of 3D Coverflow)
+   4. HOME SHELVES & DEDICATED SEARCH RESULTS VIEW
    ============================================================================ */
-html.is-mobile .discover-content {
+html.is-mobile .discover-content:not(.hidden) {
   display: flex !important;
   flex-direction: column !important;
   gap: 22px !important;
   padding: 0 !important;
+}
+
+html.is-mobile .discover-content.hidden,
+html.is-mobile #discover-empty.hidden,
+html.is-mobile #view-discover:has(#search-results-container:not(.hidden)) #discover-empty {
+  display: none !important;
+}
+
+html.is-mobile #search-results-container:not(.hidden) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  padding: 0 0 24px 0 !important;
+}
+
+html.is-mobile .violet-search-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 2px 0 10px 0 !important;
+  border-bottom: 1px solid var(--v-border) !important;
+}
+
+html.is-mobile .violet-search-back-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 32px !important;
+  padding: 0 12px 0 8px !important;
+  border-radius: 999px !important;
+  background: var(--v-surface-1) !important;
+  border: 1px solid var(--v-border) !important;
+  color: var(--v-text-1) !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+
+html.is-mobile .violet-search-page-label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--v-text-2) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+html.is-mobile .onrepeat-encore {
+  background: var(--v-surface-2) !important;
+  color: var(--v-text-1) !important;
+  border: 1px solid var(--v-border) !important;
+  box-shadow: none !important;
 }
 
 html.is-mobile .home-hero {
@@ -1008,7 +1071,7 @@ html.is-mobile body.np-open .playbar {
   padding: 10px 24px calc(var(--safe-bottom) + 16px) 24px !important;
   flex-direction: column !important;
   align-items: stretch !important;
-  background: linear-gradient(transparent, #09090B 24%) !important;
+  background: var(--v-bg) !important;
   box-shadow: none !important;
   border: none !important;
 }
@@ -1168,8 +1231,89 @@ html.is-mobile #btn-play-artist-tracks {
 }
 
 /* ============================================================================
-   8. PLAYLIST HEADER, TRACK ROWS, SETTINGS & MODALS
+   8. ALBUM VIEW SCROLLING FIX, PLAYLIST HEADER, TRACK ROWS, SETTINGS & MODALS
    ============================================================================ */
+html.is-mobile .main-content:has(#view-album.active) {
+  overflow-y: auto !important;
+  padding-bottom: 28px !important;
+}
+
+html.is-mobile #view-album,
+html.is-mobile #view-album.active {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+html.is-mobile .album-layout {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+  padding: 4px 0 24px 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+html.is-mobile .album-side {
+  width: 100% !important;
+  max-width: none !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+html.is-mobile .album-cover-wrapper,
+html.is-mobile #album-detail-cover {
+  width: 168px !important;
+  height: 168px !important;
+  border-radius: 14px !important;
+  margin: 0 auto !important;
+}
+
+html.is-mobile #album-detail-title {
+  font-size: 22px !important;
+  text-align: center !important;
+}
+
+html.is-mobile .album-artist-btn,
+html.is-mobile #album-detail-artist {
+  text-align: center !important;
+  margin: 0 auto !important;
+}
+
+html.is-mobile .album-actions {
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+html.is-mobile .album-tracks-col {
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+/* Custom CSS Live Editor Textarea */
+html.is-mobile .violet-css-textarea {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: #09090B !important;
+  color: var(--v-text-1) !important;
+  border: 1px solid var(--v-border-strong) !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  resize: vertical !important;
+  outline: none !important;
+}
+
+html.is-mobile .violet-css-textarea:focus {
+  border-color: var(--v-accent) !important;
+}
+
 html.is-mobile .playlist-detail-header {
   flex-direction: column !important;
   align-items: flex-start !important;
