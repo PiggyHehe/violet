@@ -3964,6 +3964,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     return Math.max(0, top - (parentH / 2) + (lineH / 2));
   }
 
+  function seekAudioTo(targetTime) {
+    if (!el.nativeAudio || !Number.isFinite(targetTime)) return;
+    targetTime = Math.max(0, targetTime);
+    state._userSeekingLyric = true;
+    setTimeout(() => { state._userSeekingLyric = false; }, 350);
+    el.nativeAudio.currentTime = targetTime;
+    if (typeof updateMediaPositionState === 'function') updateMediaPositionState();
+    state.lastActiveLyricIdx = -1;
+    state.forceLyricsScroll = true;
+    if (typeof updateSyncedLyricsHighlight === 'function') {
+      updateSyncedLyricsHighlight(targetTime);
+    }
+    if (typeof isGradientMode === 'function' && isGradientMode()) {
+      if (typeof updateActiveGradient === 'function') updateActiveGradient();
+      if (typeof startGradientLoop === 'function') startGradientLoop();
+    }
+  }
+
   function updateSyncedLyricsHighlight(currentTime, forcedIndex = -1) {
     if (state.syncedLyrics.length === 0 || !state.isWindowVisible) return;
     let activeIndex = forcedIndex >= 0 ? forcedIndex : -1;
@@ -5706,10 +5724,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateScrubberPositionFromEvent(e) {
     if (!el.scrubberTrack) return 0;
+    const clientX = (e.touches && e.touches[0] ? e.touches[0].clientX : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : e.clientX));
+    if (typeof clientX !== 'number' || isNaN(clientX)) return state.scrubberDragTargetTime || 0;
     const rect = el.scrubberTrack.getBoundingClientRect();
     const padLeft = 5.5;
     const trackWidth = rect.width - 2 * padLeft;
-    let pos = trackWidth > 0 ? (e.clientX - rect.left - padLeft) / trackWidth : 0;
+    let pos = trackWidth > 0 ? (clientX - rect.left - padLeft) / trackWidth : 0;
     pos = Math.max(0, Math.min(1, pos));
     const dur = (el.nativeAudio && Number.isFinite(el.nativeAudio.duration) && el.nativeAudio.duration > 0)
       ? el.nativeAudio.duration
@@ -5721,32 +5741,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     return targetTime;
   }
 
-  if (el.scrubberTrack) {
-    el.scrubberTrack.addEventListener('mousedown', (e) => {
-      isDraggingScrubber = true;
-      hasDrawnPausedFrame = false;
-      if (!animationFrameId) startVisualizers();
-      el.scrubberTrack.classList.add('dragging');
-      updateScrubberPositionFromEvent(e);
-    });
+  function onScrubberStart(e) {
+    isDraggingScrubber = true;
+    hasDrawnPausedFrame = false;
+    if (!animationFrameId) startVisualizers();
+    if (el.scrubberTrack) el.scrubberTrack.classList.add('dragging');
+    const t = updateScrubberPositionFromEvent(e);
+    if (typeof updateSyncedLyricsHighlight === 'function') updateSyncedLyricsHighlight(t);
   }
 
-  window.addEventListener('mousemove', (e) => {
+  function onScrubberMove(e) {
     if (!isDraggingScrubber) return;
-    updateScrubberPositionFromEvent(e);
-  });
+    const t = updateScrubberPositionFromEvent(e);
+    if (typeof updateSyncedLyricsHighlight === 'function') updateSyncedLyricsHighlight(t);
+  }
 
-  window.addEventListener('mouseup', (e) => {
+  function onScrubberEnd(e) {
     if (!isDraggingScrubber) return;
     isDraggingScrubber = false;
     if (el.scrubberTrack) el.scrubberTrack.classList.remove('dragging');
     const targetTime = updateScrubberPositionFromEvent(e);
-    if (!isNaN(targetTime) && el.nativeAudio) {
-      el.nativeAudio.currentTime = targetTime;
-      updateMediaPositionState();
+    if (!isNaN(targetTime)) {
+      seekAudioTo(targetTime);
     }
     state.scrubberDragTargetTime = undefined;
-  });
+  }
+
+  if (el.scrubberTrack) {
+    el.scrubberTrack.addEventListener('mousedown', onScrubberStart);
+    el.scrubberTrack.addEventListener('touchstart', onScrubberStart, { passive: true });
+    el.scrubberTrack.addEventListener('pointerdown', onScrubberStart);
+  }
+
+  window.addEventListener('mousemove', onScrubberMove);
+  window.addEventListener('touchmove', onScrubberMove, { passive: true });
+  window.addEventListener('pointermove', onScrubberMove);
+
+  window.addEventListener('mouseup', onScrubberEnd);
+  window.addEventListener('touchend', onScrubberEnd, { passive: true });
+  window.addEventListener('pointerup', onScrubberEnd);
 
   function getAllPresets() {
     return [...defaultPresets, ...state.customPresets];
@@ -16484,7 +16517,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     togglePlay: () => togglePlayPause(),
     next: () => playNext(),
     prev: () => playPrev(),
-    seek: (sec) => { if (isFinite(sec)) el.nativeAudio.currentTime = Math.max(0, sec); },
+    seek: (sec) => { if (isFinite(sec)) seekAudioTo(Math.max(0, sec)); },
     toggleShuffle: () => { if (el.btnShuffle) el.btnShuffle.click(); return state.isShuffle; },
     toggleRepeat: () => { if (el.btnRepeat) el.btnRepeat.click(); return state.isRepeat; },
     isFavorite: (t) => state.favorites.some((f) => isSameTrack(f, t)),
