@@ -2437,7 +2437,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const d = formatDuration(dur);
             if (el.timeDuration.textContent !== d) el.timeDuration.textContent = d;
           }
-          if (dur > 0 && cur / dur > 0.5 && !state.nextTrackPrefetched) {
+          if (dur > 0 && cur / dur > 0.1 && !state.nextTrackPrefetched) {
             state.nextTrackPrefetched = true;
             prefetchNextQueueTrack();
           }
@@ -5664,7 +5664,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      if (state.isPlaying && dur > 0 && cur / dur > 0.5 && !state.nextTrackPrefetched) {
+      if (state.isPlaying && dur > 0 && cur / dur > 0.1 && !state.nextTrackPrefetched) {
         state.nextTrackPrefetched = true;
         prefetchNextQueueTrack();
       }
@@ -6246,9 +6246,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             e.stopImmediatePropagation();
             if (typeof playAlbumFrom === 'function') playAlbumFrom(album, tracks, idx);
           }, true);
+          row.addEventListener('pointerdown', () => {
+            resolveAlbumTrack(album, t).then((rt) => {
+              if (rt && rt.url) {
+                fetch(`http://127.0.0.1:${state.serverPort}/api/prefetch?url=${encodeURIComponent(rt.url)}&id=${encodeURIComponent(rt.id || '')}&platform=${rt.platform || state.platform}&title=${encodeURIComponent(rt.title || '')}&artist=${encodeURIComponent(rt.artist || '')}&duration=${encodeURIComponent(rt.duration || 0)}&thumbnail=${encodeURIComponent(rt.thumbnail || '')}`).catch(() => {});
+              }
+            }).catch(() => {});
+          }, { passive: true });
           listEl.appendChild(row);
         });
         highlightPlayingRow();
+        // Background pre-resolve top 3 album tracks so tapping inside an album starts fast
+        setTimeout(() => {
+          tracks.slice(0, 3).forEach((t, i) => {
+            resolveAlbumTrack(album, t).then((rt) => {
+              if (rt && rt.url) {
+                const metaParams = i === 0 ? `&title=${encodeURIComponent(rt.title || '')}&artist=${encodeURIComponent(rt.artist || '')}&duration=${encodeURIComponent(rt.duration || 0)}&thumbnail=${encodeURIComponent(rt.thumbnail || '')}` : '';
+                fetch(`http://127.0.0.1:${state.serverPort}/api/prefetch?url=${encodeURIComponent(rt.url)}&id=${encodeURIComponent(rt.id || '')}&platform=${rt.platform || state.platform}${metaParams}`).catch(() => {});
+              }
+            }).catch(() => {});
+          });
+        }, 50);
         const albumTracksCol = document.querySelector('#view-album .album-tracks-col');
         if (albumTracksCol) {
           albumTracksCol.scrollTop = 0;
@@ -6578,11 +6596,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         let prefetchTimer = null;
+        const triggerRowPrefetch = (includeMeta) => {
+          if (!track || !track.url || track.platform === 'local' || context === 'album') return;
+          const base = `http://127.0.0.1:${state.serverPort}/api/prefetch?url=${encodeURIComponent(track.url)}&id=${encodeURIComponent(track.id || '')}&platform=${track.platform || state.platform}`;
+          const full = includeMeta
+            ? `${base}&title=${encodeURIComponent(track.title || '')}&artist=${encodeURIComponent(track.artist || '')}&duration=${encodeURIComponent(track.duration || 0)}&thumbnail=${encodeURIComponent(track.thumbnail || '')}`
+            : base;
+          fetch(full).catch(() => {});
+        };
+        row.addEventListener('pointerdown', () => {
+          triggerRowPrefetch(false);
+          if (prefetchTimer) clearTimeout(prefetchTimer);
+          prefetchTimer = setTimeout(() => triggerRowPrefetch(true), 45);
+        }, { passive: true });
+        row.addEventListener('pointercancel', () => {
+          if (prefetchTimer) { clearTimeout(prefetchTimer); prefetchTimer = null; }
+        }, { passive: true });
         row.addEventListener('mouseenter', () => {
           if (track.url && track.platform !== 'local') {
-            prefetchTimer = setTimeout(() => {
-              fetch(`http://127.0.0.1:${state.serverPort}/api/prefetch?url=${encodeURIComponent(track.url)}&id=${encodeURIComponent(track.id)}&platform=${track.platform || state.platform}`).catch(() => {});
-            }, 300);
+            prefetchTimer = setTimeout(() => triggerRowPrefetch(false), 180);
           }
         });
         row.addEventListener('mouseleave', () => {

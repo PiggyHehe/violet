@@ -1389,9 +1389,39 @@ html.is-mobile .track-row:nth-child(n+25) {
   contain-intrinsic-size: none;
 }
 
-/* Settings & Modals */
+/* Settings & Modals (Centered, Full-Width Mobile Fit, Zero Horizontal Shift) */
+html.is-mobile #view-settings,
+html.is-mobile .settings-view,
+html.is-mobile .settings-layout,
+html.is-mobile .settings-pane,
+html.is-mobile .settings-content,
+html.is-mobile .settings-section,
+html.is-mobile .m3-group,
+html.is-mobile .setting-item {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+html.is-mobile #view-settings {
+  padding: 0 !important;
+  overflow-x: hidden !important;
+}
+
+html.is-mobile .settings-view {
+  padding: 4px 0 24px 0 !important;
+  gap: 14px !important;
+  align-items: stretch !important;
+  overflow-x: hidden !important;
+}
+
 html.is-mobile .settings-layout {
   flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
   gap: 12px !important;
 }
 
@@ -1402,7 +1432,10 @@ html.is-mobile .settings-nav {
   overflow-x: auto !important;
   max-height: none !important;
   width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
   gap: 6px !important;
+  margin: 0 auto !important;
 }
 
 html.is-mobile .settings-nav-btn {
@@ -1410,31 +1443,34 @@ html.is-mobile .settings-nav-btn {
   white-space: nowrap !important;
 }
 
-html.is-mobile #view-settings {
-  padding: 0 !important;
-}
-
+html.is-mobile .settings-pane,
 html.is-mobile .settings-content,
 html.is-mobile .settings-section,
 html.is-mobile .m3-group {
   padding-left: 0 !important;
   padding-right: 0 !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
 }
 
 html.is-mobile .setting-item {
   padding: 14px !important;
+  overflow: hidden !important;
 }
 
 html.is-mobile .setting-item-top {
-  gap: 12px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
   align-items: center !important;
+  justify-content: space-between !important;
 }
 
 html.is-mobile .setting-item-top > div:first-child,
 html.is-mobile .setting-item-top > .setting-name:first-child {
-  flex: 1 1 auto !important;
+  flex: 1 1 160px !important;
   min-width: 0 !important;
 }
 
@@ -1443,6 +1479,20 @@ html.is-mobile .setting-item-top > button,
 html.is-mobile .setting-item-top > .theme-mode-toggle {
   flex: 0 0 auto !important;
   margin-left: auto !important;
+}
+
+html.is-mobile .ct-head {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html.is-mobile .ct-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
 }
 
 html.is-mobile .setting-hints > span:not(:first-child):not(:last-child),
@@ -1456,18 +1506,28 @@ html.is-mobile .setting-hints {
 }
 
 html.is-mobile .modal-backdrop {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
   background: rgba(0, 0, 0, 0.75) !important;
   z-index: 5000 !important;
   padding: calc(var(--safe-top) + 12px) 12px calc(var(--safe-bottom) + 12px) !important;
 }
 
 html.is-mobile .settings-card,
+html.is-mobile .dialog-card,
+html.is-mobile .modal-card,
 html.is-mobile .modal-backdrop > * {
   background: var(--v-surface-1) !important;
   border: 1px solid var(--v-border-strong) !important;
+  width: 100% !important;
   max-width: calc(100vw - 24px) !important;
   max-height: calc(100vh - var(--safe-top) - var(--safe-bottom) - 24px) !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 html.is-mobile .toast-container {

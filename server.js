@@ -1456,7 +1456,7 @@ async function prefetchTrack(trackUrl, trackId, platform, meta = null) {
     cleanId = cleanTrackId(trackUrl.split('v=')[1].split('&')[0]);
   }
   const cacheKey = (cleanId || trackUrl || '').toLowerCase();
-  if (!cacheKey || prefetchingSet.size > 5) return;
+  if (!cacheKey || prefetchingSet.size > 10) return;
   const isCached = (cleanId && await findCachedFile(cleanId)) || streamUrlCache.has(cacheKey) || (cleanId && streamUrlCache.has(cleanId));
   if (isCached || prefetchingSet.has(cacheKey)) return;
   if (STREAM_VIA_CACHE) {
@@ -1691,18 +1691,183 @@ async function handleSearch(req, res, query, platform = 'youtube', limit = 20) {
     return res.end(JSON.stringify(body));
   };
   try {
-  if (platform === 'youtube') {
+  if (platform === 'youtube' || platform === 'ytmusic') {
     try {
-      const directTracks = await directYoutubeSearch(query);
-      if (directTracks && directTracks.length > 0) {
-        const result = { success: true, tracks: directTracks.slice(0, limit) };
+      const normStr = (v) => String(v || '').toLowerCase().replace(/\(.*?\)|\[.*?\]/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+      const rawDirectPromise = directYoutubeSearch(query).catch(() => []);
+      const [ytmSongs, ytmVideos, itunesSongs, fastDirect] = await Promise.all([
+        ytmSearchRequest(query, YTM_SONGS_PARAMS).then(parseYtmSongs).catch(() => []),
+        ytmSearchRequest(query, YTM_VIDEOS_PARAMS).then((j) => parseYtmSongs(j).map((v) => (/\bviews?$/i.test(v.album) ? { ...v, album: '' } : v))).catch(() => []),
+        limit >= 8
+          ? fetchItunesJson(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&media=music&limit=10${itunesCountryParam()}`)
+              .then((d) => (d && Array.isArray(d.results)) ? d.results.filter((r) => r && r.wrapperType === 'track' && r.trackName && r.artistName) : [])
+              .catch(() => [])
+          : Promise.resolve([]),
+        Promise.race([rawDirectPromise, new Promise((r) => setTimeout(() => r(null), 1500))])
+      ]);
+      const directTracks = fastDirect !== null ? fastDirect : ((ytmSongs.length + ytmVideos.length === 0) ? await rawDirectPromise : []);
+
+      const allPool = [
+        ...ytmSongs.map((t, i) => ({ ...t, _src: 'ytm_song', _rank: i, _boost: 55 })),
+        ...ytmVideos.map((t, i) => ({ ...t, _src: 'ytm_video', _rank: i, _boost: 25 })),
+        ...(directTracks || []).map((t, i) => ({
+          ...t,
+          artist: String(t.artist || '').replace(/\s*-\s*Topic$/i, '').trim() || 'Unknown Artist',
+          _src: 'yt_direct',
+          _rank: i,
+          _boost: 10
+        }))
+      ];
+
+      // Album-Track Rescue: cross-check with iTunes song catalog so songs inside an artist's album are never missed
+      const missingItunes = [];
+      for (const it of itunesSongs.slice(0, 6)) {
+        const itT = normStr(it.trackName);
+        const itA = normStr(it.artistName);
+        if (!itT) continue;
+        const hiCover = it.artworkUrl100 ? it.artworkUrl100.replace('100x100', '600x600') : '';
+        let matched = false;
+        for (const cand of allPool) {
+          const cT = normStr(cand.title);
+          const cA = normStr(cand.artist);
+          const titleMatch = cT === itT || (itT.length >= 3 && cT.includes(itT)) || (cT.length >= 3 && itT.includes(cT));
+          const artistMatch = !itA || cA.includes(itA) || itA.includes(cA) || cT.includes(itA);
+          if (titleMatch && artistMatch) {
+            matched = true;
+            cand._itunesBoost = Math.max(cand._itunesBoost || 0, 70);
+            if (!cand.album && it.collectionName) cand.album = it.collectionName;
+            if (hiCover && (!cand.thumbnail || !cand.thumbnail.includes('=w544-h544'))) cand.thumbnail = hiCover;
+          }
+        }
+        if (!matched && missingItunes.length < 3) {
+          missingItunes.push(it);
+        }
+      }
+
+      if (missingItunes.length > 0) {
+        const rescuedLists = await Promise.all(
+          missingItunes.map(async (it, idx) => {
+            const qAlbumTrack = `${it.artistName} ${it.trackName}`.trim();
+            const found = await ytmSearchRequest(qAlbumTrack, YTM_SONGS_PARAMS).then(parseYtmSongs).catch(() => []);
+            const itT = normStr(it.trackName);
+            const wantSec = it.trackTimeMillis ? Math.round(it.trackTimeMillis / 1000) : 0;
+            const pick = found.find((f) => {
+              const fT = normStr(f.title);
+              const durOk = !wantSec || !f.duration || Math.abs(f.duration - wantSec) <= 15;
+              return durOk && (fT === itT || fT.includes(itT) || itT.includes(fT));
+            }) || found[0];
+            if (!pick) return null;
+            const hiCover = it.artworkUrl100 ? it.artworkUrl100.replace('100x100', '600x600') : pick.thumbnail;
+            return {
+              ...pick,
+              title: it.trackName || pick.title,
+              artist: it.artistName || pick.artist,
+              album: it.collectionName || pick.album || '',
+              thumbnail: hiCover || pick.thumbnail,
+              _src: 'itunes_ytm',
+              _rank: idx,
+              _boost: 65,
+              _itunesBoost: 80
+            };
+          })
+        );
+        for (const r of rescuedLists) {
+          if (r && r.id) allPool.unshift(r);
+        }
+      }
+
+      const byId = new Map();
+      for (const item of allPool) {
+        if (!item || !item.id || !/^[\w-]{11}$/.test(String(item.id))) continue;
+        const prev = byId.get(item.id);
+        if (!prev || (item._boost + (item._itunesBoost || 0)) > (prev._boost + (prev._itunesBoost || 0))) {
+          byId.set(item.id, item);
+        }
+      }
+
+      const normQ = normStr(query);
+      const qWords = normQ.split(' ').filter(Boolean);
+      const wantsNoise = /\b(reaction|review|tutorial|interview|1 hour|10 hours|full album|karaoke|instrumental|8d|nightcore|slowed|sped up|remix|live|cover)\b/i.test(query);
+
+      const scored = [...byId.values()].map((item) => {
+        const nT = normStr(item.title);
+        const nA = normStr(item.artist);
+        const nAlb = normStr(item.album || '');
+        const hay = `${nT} ${nA} ${nAlb}`.trim();
+        let score = (item._boost || 0) + (item._itunesBoost || 0) + Math.max(0, 28 - (item._rank || 0) * 1.5);
+
+        if (nT === normQ) score += 110;
+        else if (`${nA} ${nT}` === normQ || `${nT} ${nA}` === normQ) score += 140;
+        else if (nT.startsWith(normQ)) score += 40;
+        else if (nT.includes(normQ)) score += 25;
+
+        if (qWords.length > 0) {
+          let hit = 0;
+          for (const w of qWords) {
+            if (hay.includes(w)) hit++;
+          }
+          if (hit === qWords.length) score += 75;
+          else score += (hit / qWords.length) * 40;
+        }
+
+        const dur = Number(item.duration) || 0;
+        if (dur > 0 && (dur < 28 || (!wantsNoise && dur > 1200))) score -= 120;
+
+        if (!wantsNoise) {
+          if (/\b(reaction|review|tutorial|how to|interview|podcast|explained|behind the scenes|making of|teaser|trailer)\b/i.test(item.title)) score -= 160;
+          if (/\b(1 hour|10 hours|full album|compilation)\b/i.test(item.title)) score -= 120;
+          if (/\b(karaoke|instrumental|8d|nightcore|chipmunk|bass boosted)\b/i.test(item.title)) score -= 50;
+        }
+
+        return { item, score };
+      });
+
+      scored.sort((a, b) => b.score - a.score);
+      const topItems = scored.slice(0, limit).map((x) => x.item);
+
+      if (topItems.length > 0) {
+        ytmFailCount = 0;
+        const entries = await Promise.all(topItems.map(async (s) => {
+          if (s.artist && s.artist !== 'Unknown Artist') {
+            ytArtistCache.set(s.id, s.artist);
+            trimCache(ytArtistCache, 2000);
+          }
+          const isCached = await findCachedFile(s.id);
+          return {
+            id: s.id,
+            title: s.title,
+            artist: s.artist || 'Unknown Artist',
+            album: s.album || '',
+            duration: s.duration || 0,
+            thumbnail: s.thumbnail || `https://i.ytimg.com/vi/${s.id}/hqdefault.jpg`,
+            url: `https://www.youtube.com/watch?v=${s.id}`,
+            platform: 'youtube',
+            isCached: !!isCached
+          };
+        }));
+
+        const result = { success: true, tracks: entries };
         cacheSearchResult(cacheKey, result);
 
+        // Fast loading for search results: pre-download top 2 results into in-memory Blob cache
+        // and pre-warm stream/HLS manifest metadata for results #3-#8!
         setTimeout(() => {
-          if (directTracks[0] && directTracks[0].url) {
-            prefetchTrack(directTracks[0].url, directTracks[0].id, 'youtube').catch(() => {});
-          }
-        }, 100);
+          entries.slice(0, 2).forEach((t) => {
+            if (t && t.url) {
+              prefetchTrack(t.url, t.id, 'youtube', {
+                title: t.title,
+                artist: t.artist,
+                duration: t.duration,
+                thumbnail: t.thumbnail
+              }).catch(() => {});
+            }
+          });
+          entries.slice(2, 8).forEach((t) => {
+            if (t && t.url) {
+              prefetchTrack(t.url, t.id, 'youtube').catch(() => {});
+            }
+          });
+        }, 15);
 
         return sendResponse(200, result);
       }
